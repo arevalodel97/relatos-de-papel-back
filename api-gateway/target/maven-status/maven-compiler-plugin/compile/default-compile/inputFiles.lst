@@ -1,0 +1,6 @@
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/config/WebClientConfig.java
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/ApiGatewayApplication.java
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/exception/GlobalExceptionHandler.java
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/dto/GatewayRequestDTO.java
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/service/GatewayService.java
+/home/diego_arevalo/Escritorio/backend-unir/api-gateway/src/main/java/com/relatosDePapel/gateway/controller/GatewayController.java

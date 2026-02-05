@@ -1,0 +1,319 @@
+{
+  "info": {
+    "name": "ms-books-catalogue API",
+    "_postman_id": "books-catalogue-collection",
+    "description": "Colección completa de endpoints para el microservicio de catálogo de libros - Relatos de Papel",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "CRUD Operations",
+      "item": [
+        {
+          "name": "Listar todos los libros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "Obtener libro por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear libro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"El nombre del viento\",\n  \"author\": \"Patrick Rothfuss\",\n  \"publishedDate\": \"2007-03-27\",\n  \"category\": \"Fantasía\",\n  \"isbn\": \"978-84-8346-530-1\",\n  \"rating\": 5,\n  \"visible\": true,\n  \"stock\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar libro completo (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Don Quijote de la Mancha (Edición Especial)\",\n  \"author\": \"Miguel de Cervantes\",\n  \"publishedDate\": \"1605-01-16\",\n  \"category\": \"Clásicos\",\n  \"isbn\": \"978-84-376-0494-7\",\n  \"rating\": 5,\n  \"visible\": true,\n  \"stock\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar libro parcialmente (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 150\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar libro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Búsqueda",
+      "item": [
+        {
+          "name": "Buscar sin filtros (todos visibles)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"]
+            }
+          }
+        },
+        {
+          "name": "Buscar por título",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?title=quijote",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "quijote"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por autor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?author=garcía",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "garcía"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por categoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?category=fantasía",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "fantasía"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?rating=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "rating",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ISBN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?isbn=978-84-376-0494-7",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "isbn",
+                  "value": "978-84-376-0494-7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar libros ocultos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?visible=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "visible",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Búsqueda combinada - Autor + Categoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?author=garcía&category=realismo",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "garcía"
+                },
+                {
+                  "key": "category",
+                  "value": "realismo"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Búsqueda combinada - Categoría + Rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/search?category=fantasía&rating=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "fantasía"
+                },
+                {
+                  "key": "rating",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health & Info",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "info"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    }
+  ]
+}

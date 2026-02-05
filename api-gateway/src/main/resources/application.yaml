@@ -1,0 +1,62 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # Deshabilitamos las rutas automáticas porque usaremos programación custom
+      discovery:
+        locator:
+          enabled: false
+
+      # Configuración global
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST,PUT,PATCH,DELETE
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+
+# Configuración de Eureka Client
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# Nombres de los microservicios en Eureka (configurables)
+gateway:
+  services:
+    catalogue: ${CATALOGUE_SERVICE_NAME:ms-books-catalogue}
+    payments: ${PAYMENTS_SERVICE_NAME:ms-books-payments}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.relatosDePapel.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG

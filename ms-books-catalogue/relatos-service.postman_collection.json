@@ -1,0 +1,180 @@
+{
+  "info": {
+    "name": "Books API - Tests (ISBN con guiones, filtros)",
+    "_postman_id": "relatos-books-updated-001",
+    "description": "Colección para probar CRUD y búsquedas; exige ISBN con guiones (formato xxx-x-xxx-xxxxx-x). Ejecutar 01 - Setup primero.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081", "type": "string" },
+    { "key": "authToken", "value": "", "type": "string" },
+    { "key": "uniqueIsbn", "value": "", "type": "string" },
+    { "key": "uniqueIsbnFormatted", "value": "", "type": "string" },
+    { "key": "uniqueTitle", "value": "", "type": "string" },
+    { "key": "createdBookId", "value": "", "type": "string" },
+    { "key": "createdBookISBN", "value": "", "type": "string" },
+    { "key": "longTitle", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01 - Setup - generate ISBN (con guiones) y título único",
+      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/", "host": [ "{{baseUrl}}" ] } },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Genera 12 dígitos únicos y calcula el dígito de control para ISBN-13",
+              "const ts12 = Date.now().toString().slice(-12);",
+              "const base12 = ts12.padStart(12, '0');",
+              "let sum = 0;",
+              "for (let i = 0; i < 12; i++) {",
+              "  const d = parseInt(base12.charAt(i), 10);",
+              "  sum += d * (i % 2 === 0 ? 1 : 3);",
+              "}",
+              "const check = (10 - (sum % 10)) % 10;",
+              "const isbn13 = base12 + check;",
+              "const formatted = isbn13.substring(0,3) + '-' + isbn13.charAt(3) + '-' + isbn13.substring(4,7) + '-' + isbn13.substring(7,12) + '-' + isbn13.charAt(12);",
+              "pm.environment.set('uniqueIsbn', isbn13);",
+              "pm.environment.set('uniqueIsbnFormatted', formatted);",
+              "pm.environment.set('uniqueTitle', 'Libro prueba ' + Date.now());",
+              "console.log('ISBN generado (formateado):', formatted);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('vars set', () => { pm.expect(pm.environment.get('uniqueIsbnFormatted')).to.be.a('string'); pm.expect(pm.environment.get('uniqueTitle')).to.be.a('string'); });" ] }
+        }
+      ]
+    },
+
+    {
+      "name": "02 - Create - valid book (usa ISBN con guiones)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{authToken}}" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"{{uniqueTitle}}\",\n  \"author\": \"Autor Ejemplo\",\n  \"isbn\": \"{{uniqueIsbnFormatted}}\",\n  \"pages\": 150,\n  \"description\": \"Descripción de prueba\",\n  \"rating\": 5,\n  \"category\": \"Test category\",\n  \"stock\": 10,\n  \"visible\": true\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/books", "host": [ "{{baseUrl}}" ], "path": [ "books" ] }
+      },
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('201 or 200', () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+          "const j = pm.response.json();",
+          "pm.test('has id and isbn formatted', () => { pm.expect(j).to.have.property('id'); pm.expect(j).to.have.property('isbn'); pm.expect(j.isbn).to.eql(pm.environment.get('uniqueIsbnFormatted')); });",
+          "if (pm.response.code===200 || pm.response.code===201) { pm.environment.set('createdBookId', j.id+''); pm.environment.set('createdBookISBN', j.isbn+''); }"
+        ] } }
+      ]
+    },
+
+    {
+      "name": "03 - Create - duplicate ISBN -> 409/400",
+      "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Duplicado\",\n  \"author\": \"Autor D\",\n  \"isbn\": \"{{uniqueIsbnFormatted}}\",\n  \"pages\": 100\n}" },
+        "url": { "raw": "{{baseUrl}}/books", "host": [ "{{baseUrl}}" ], "path": [ "books" ] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('duplicate -> 400/409', () => pm.expect(pm.response.code).to.be.oneOf([400,409]));" ] } } ]
+    },
+
+    {
+      "name": "04 - Create - missing required -> 400",
+      "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{ \"author\": \"Sin título\" }" },
+        "url": { "raw": "{{baseUrl}}/books", "host": [ "{{baseUrl}}" ], "path": [ "books" ] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('missing -> 400', () => pm.expect(pm.response.code).to.be.oneOf([400,422]));" ] } } ]
+    },
+
+    {
+      "name": "05 - Get - all books (GET /books) - sin paginación",
+      "request": { "method": "GET", "header": [ { "key": "Accept", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/books", "host": [ "{{baseUrl}}" ], "path": [ "books" ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('200', () => pm.expect(pm.response.code).to.eql(200));", "pm.test('body array or object', () => { const j=pm.response.json(); pm.expect(j===null||typeof j==='object').to.be.ok; });" ] } } ]
+    },
+
+    {
+      "name": "06 - Get - by id (existing)",
+      "request": { "method": "GET", "header": [ { "key": "Accept", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": [ "{{baseUrl}}" ], "path": [ "books", "{{createdBookId}}" ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('get exists -> 200', () => pm.expect(pm.response.code).to.eql(200));", "const j=pm.response.json(); pm.test('fields', () => { pm.expect(j).to.have.property('id'); pm.expect(j).to.have.property('isbn'); });" ] } } ]
+    },
+
+    {
+      "name": "07 - Update - PUT valid",
+      "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"{{uniqueTitle}} - edit\",\n  \"author\": \"Autor Edit\",\n  \"isbn\": \"{{createdBookISBN}}\",\n  \"pages\": 180,\n  \"rating\": 5,\n  \"category\": \"Test category\",\n  \"stock\": 8,\n  \"visible\": true\n}" },
+        "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": [ "{{baseUrl}}" ], "path": [ "books", "{{createdBookId}}" ] }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('put -> 200/204', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));" ] } } ]
+    },
+
+    {
+      "name": "08 - Patch - parcial (pages)",
+      "request": { "method": "PATCH", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{ \"pages\": 210 }" }, "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": [ "{{baseUrl}}" ], "path": [ "books", "{{createdBookId}}" ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('patch -> 200/204', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));" ] } } ]
+    },
+
+    {
+      "name": "09 - Invalid update - negative pages -> 400",
+      "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{ \"title\": \"Bad\", \"author\": \"A\", \"isbn\": \"{{createdBookISBN}}\", \"pages\": -10 }" }, "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": [ "{{baseUrl}}" ], "path": [ "books", "{{createdBookId}}" ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('invalid -> 400/422', () => pm.expect(pm.response.code).to.be.oneOf([400,422]));" ] } } ]
+    },
+
+    {
+      "name": "10 - Delete - existing",
+      "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": [ "{{baseUrl}}" ], "path": [ "books", "{{createdBookId}}" ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('delete -> 204/200', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));" ] } } ]
+    },
+
+    {
+      "name": "11 - Search - by title (non-paginated)",
+      "request": { "method": "GET", "header": [ { "key": "Accept", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/books?title={{uniqueTitle}}", "host": [ "{{baseUrl}}" ], "path": [ "books" ], "query": [ { "key": "title", "value": "{{uniqueTitle}}" } ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('search by title -> 200', () => pm.expect(pm.response.code).to.eql(200));", "const j=pm.response.json(); if (Array.isArray(j) && j.length>0) { const found = j.some(it => (it.title||'').includes(pm.environment.get('uniqueTitle')) ); pm.test('contains created title', () => pm.expect(found).to.be.true); } else { pm.test('no results ok', () => pm.expect(j).to.be.ok); }" ] } } ]
+    },
+
+    {
+      "name": "12 - Search - all filters together (title+author+category+isbn+rating+visible)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Accept", "value": "application/json" } ],
+        "url": {
+          "raw": "{{baseUrl}}/books/search?title={{uniqueTitle}}&author=Autor%20Ejemplo&category=Test%20category&isbn={{createdBookISBN}}&rating=5&visible=true",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "books", "search" ],
+          "query": [
+            { "key": "title", "value": "{{uniqueTitle}}" },
+            { "key": "author", "value": "Autor Ejemplo" },
+            { "key": "category", "value": "Test category" },
+            { "key": "isbn", "value": "{{createdBookISBN}}" },
+            { "key": "rating", "value": "5" },
+            { "key": "visible", "value": "true" }
+          ]
+        }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('search all filters -> 200', () => pm.expect(pm.response.code).to.eql(200));", "const j=pm.response.json(); if (Array.isArray(j)) { const found = j.some(it => (it.isbn||'')===pm.environment.get('createdBookISBN')); pm.test('contains created isbn', () => pm.expect(found).to.be.true); }" ] } } ]
+    },
+
+    {
+      "name": "13 - Search - some filters (title + rating)",
+      "request": { "method": "GET", "header": [ { "key": "Accept", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/books/search?title={{uniqueTitle}}&rating=5", "host": [ "{{baseUrl}}" ], "path": [ "books", "search" ], "query": [ { "key": "title", "value": "{{uniqueTitle}}" }, { "key": "rating", "value": "5" } ] } },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('search title+rating -> 200', () => pm.expect(pm.response.code).to.eql(200));" ] } } ]
+    },
+
+    {
+      "name": "14 - Edge - long title",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{ \"title\": \"{{longTitle}}\", \"author\": \"A\", \"isbn\": \"{{uniqueIsbnFormatted}}\", \"pages\": 10 }" },
+        "url": { "raw": "{{baseUrl}}/books", "host": [ "{{baseUrl}}" ], "path": [ "books" ] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [ "pm.environment.set('longTitle', 'L'.repeat(500));" ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('long title -> 400/422 or 200/201', () => pm.expect(pm.response.code).to.be.oneOf([400,422,200,201]));" ] } }
+      ]
+    }
+
+  ]
+}

@@ -1,0 +1,325 @@
+### ============================================
+### API GATEWAY - EJEMPLOS DE REQUESTS
+### Relatos de Papel
+### ============================================
+
+### Health Check del Gateway
+GET http://localhost:8080/api/health
+Content-Type: application/json
+
+### ============================================
+### BOOKS CATALOGUE - OPERACIONES GET
+### ============================================
+
+### 1. GET - Listar todos los libros
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/books"
+  }
+}
+
+### 2. GET - Buscar libros por autor
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/books/search",
+    "author": "Borges"
+  }
+}
+
+### 3. GET - Buscar libros por múltiples filtros
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/books/search",
+    "author": "Borges",
+    "rating": "5",
+    "visible": "true"
+  }
+}
+
+### 4. GET - Obtener libro por ID
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/books/1"
+  }
+}
+
+### ============================================
+### BOOKS CATALOGUE - OPERACIONES POST
+### ============================================
+
+### 5. POST - Crear un libro
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "POST",
+  "queryParams": {
+    "path": "/books"
+  },
+  "body": {
+    "title": "El Aleph",
+    "author": "Jorge Luis Borges",
+    "isbn": "978-0142437889",
+    "publishedDate": "1949-06-25",
+    "category": "Ficción",
+    "price": 19.99,
+    "stock": 50,
+    "visible": true,
+    "description": "Colección de cuentos cortos del maestro argentino"
+  }
+}
+
+### 6. POST - Crear otro libro
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "POST",
+  "queryParams": {
+    "path": "/books"
+  },
+  "body": {
+    "title": "Cien años de soledad",
+    "author": "Gabriel García Márquez",
+    "isbn": "978-0060883287",
+    "publishedDate": "1967-05-30",
+    "category": "Realismo Mágico",
+    "price": 24.99,
+    "stock": 75,
+    "visible": true,
+    "description": "Historia de la familia Buendía en Macondo"
+  }
+}
+
+### ============================================
+### BOOKS CATALOGUE - OPERACIONES PUT
+### ============================================
+
+### 7. PUT - Actualizar libro completo
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "PUT",
+  "queryParams": {
+    "path": "/books/1"
+  },
+  "body": {
+    "title": "El Aleph - Edición Especial",
+    "author": "Jorge Luis Borges",
+    "isbn": "978-0142437889",
+    "publishedDate": "1949-06-25",
+    "category": "Ficción",
+    "price": 29.99,
+    "stock": 100,
+    "visible": true,
+    "description": "Edición especial con prólogo de autor"
+  }
+}
+
+### ============================================
+### BOOKS CATALOGUE - OPERACIONES PATCH
+### ============================================
+
+### 8. PATCH - Actualizar precio y stock
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "PATCH",
+  "queryParams": {
+    "path": "/books/1"
+  },
+  "body": {
+    "price": 34.99,
+    "stock": 200
+  }
+}
+
+### 9. PATCH - Actualizar solo visibilidad
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "PATCH",
+  "queryParams": {
+    "path": "/books/1"
+  },
+  "body": {
+    "visible": false
+  }
+}
+
+### ============================================
+### BOOKS CATALOGUE - OPERACIONES DELETE
+### ============================================
+
+### 10. DELETE - Eliminar libro
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "DELETE",
+  "queryParams": {
+    "path": "/books/1"
+  }
+}
+
+### ============================================
+### PAYMENTS - OPERACIONES GET
+### ============================================
+
+### 11. GET - Listar todas las compras
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/payments/purchases"
+  }
+}
+
+### 12. GET - Obtener compra por ID
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/payments/purchases/1"
+  }
+}
+
+### ============================================
+### PAYMENTS - OPERACIONES POST
+### ============================================
+
+### 13. POST - Crear una compra simple
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "POST",
+  "queryParams": {
+    "path": "/payments/purchases"
+  },
+  "body": {
+    "customerName": "Juan Pérez",
+    "customerEmail": "juan.perez@example.com",
+    "items": [
+      {
+        "bookId": 1,
+        "quantity": 2
+      }
+    ]
+  }
+}
+
+### 14. POST - Crear compra con múltiples libros
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "POST",
+  "queryParams": {
+    "path": "/payments/purchases"
+  },
+  "body": {
+    "customerName": "María García",
+    "customerEmail": "maria.garcia@example.com",
+    "items": [
+      {
+        "bookId": 1,
+        "quantity": 1
+      },
+      {
+        "bookId": 2,
+        "quantity": 3
+      },
+      {
+        "bookId": 3,
+        "quantity": 2
+      }
+    ]
+  }
+}
+
+### ============================================
+### CASOS DE ERROR - VALIDACIONES
+### ============================================
+
+### 15. ERROR - Falta el campo 'method'
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "queryParams": {
+    "path": "/books"
+  }
+}
+
+### 16. ERROR - Método inválido
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "INVALID",
+  "queryParams": {
+    "path": "/books"
+  }
+}
+
+### 17. ERROR - Falta 'path' en queryParams
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "author": "Borges"
+  }
+}
+
+### 18. ERROR - Path inválido (no empieza con /books ni /payments)
+POST http://localhost:8080/api/gateway
+Content-Type: application/json
+
+{
+  "method": "GET",
+  "queryParams": {
+    "path": "/invalid/route"
+  }
+}
+
+### ============================================
+### ACTUATOR ENDPOINTS
+### ============================================
+
+### Actuator - Health
+GET http://localhost:8080/actuator/health
+
+### Actuator - Info
+GET http://localhost:8080/actuator/info
+
+### Actuator - Metrics
+GET http://localhost:8080/actuator/metrics
+
+### Actuator - Gateway Routes
+GET http://localhost:8080/actuator/gateway/routes

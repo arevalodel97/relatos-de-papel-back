@@ -1,0 +1,6 @@
+com/relatosDePapel/gateway/service/GatewayService.class
+com/relatosDePapel/gateway/controller/GatewayController.class
+com/relatosDePapel/gateway/ApiGatewayApplication.class
+com/relatosDePapel/gateway/dto/GatewayRequestDTO.class
+com/relatosDePapel/gateway/config/WebClientConfig.class
+com/relatosDePapel/gateway/exception/GlobalExceptionHandler.class

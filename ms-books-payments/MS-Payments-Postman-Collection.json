@@ -1,0 +1,534 @@
+{
+	"info": {
+		"_postman_id": "ms-books-payments-collection",
+		"name": "MS Books Payments - API Tests",
+		"description": "Colección completa para probar todos los endpoints del microservicio de pagos (ms-books-payments)\n\n**Puerto:** 8082\n**Base URL:** http://localhost:8082\n\n**Orden de ejecución recomendado:**\n1. GETs (lectura sin efectos secundarios)\n2. POSTs (creación de recursos)\n3. GETs para verificar datos creados\n\n**Nota:** Asegúrate de que el servicio ms-books-catalogue esté corriendo en el puerto 8081 para que las validaciones funcionen correctamente.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Health Check",
+			"item": [
+				{
+					"name": "Health Check - Actuator",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Verifica que el servicio esté funcionando correctamente"
+					},
+					"response": []
+				},
+				{
+					"name": "OpenAPI Documentation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v3/api-docs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v3",
+								"api-docs"
+							]
+						},
+						"description": "Obtiene la documentación OpenAPI en formato JSON"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. GET Requests",
+			"item": [
+				{
+					"name": "GET - Listar todas las compras (vacío inicial)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Obtiene la lista de todas las compras registradas. Inicialmente debería retornar un array vacío []"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener compra por ID (404 - no existe)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases/999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases",
+								"999"
+							]
+						},
+						"description": "Intenta obtener una compra que no existe. Debería retornar 404 Not Found"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. POST Requests",
+			"item": [
+				{
+					"name": "POST - Crear compra exitosa (libro ID 1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Guardar el ID de la compra creada para usarlo en otros tests",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"purchaseId\", jsonData.id);",
+									"    console.log(\"Purchase ID guardado: \" + jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Juan Pérez\",\n    \"email\": \"juan.perez@example.com\",\n    \"address\": \"Calle Principal 123, Madrid\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Crea una compra válida con un libro existente (ID 1). Retorna 201 Created con los detalles de la compra.\n\n**Prerequisito:** El libro con ID 1 debe existir en ms-books-catalogue y estar visible con stock suficiente."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Crear compra con múltiples libros",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"María García\",\n    \"email\": \"maria.garcia@example.com\",\n    \"address\": \"Avenida Libertad 456, Barcelona\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 1\n    },\n    {\n      \"bookId\": 2,\n      \"quantity\": 3\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Crea una compra con múltiples libros diferentes. Retorna 201 Created.\n\n**Prerequisito:** Los libros con ID 1 y 2 deben existir y tener stock suficiente."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Crear compra con cliente diferente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Carlos Rodríguez\",\n    \"email\": \"carlos.rodriguez@example.com\",\n    \"address\": \"Plaza Mayor 789, Valencia\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 3,\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Crea una compra para otro cliente con libro ID 3."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Libro no encontrado (404)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Test Usuario\",\n    \"email\": \"test@example.com\",\n    \"address\": \"Calle Test 999\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 99999,\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra con un libro que no existe. Debería retornar 404 Not Found con el mensaje \"Libro con ID 99999 no encontrado\"."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Validación - customer null",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": null,\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra sin datos del cliente. Debería retornar 400 Bad Request con errores de validación."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Validación - email inválido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Test Usuario\",\n    \"email\": \"email-invalido\",\n    \"address\": \"Calle Test 123\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra con un email inválido. Debería retornar 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Validación - items vacío",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Test Usuario\",\n    \"email\": \"test@example.com\",\n    \"address\": \"Calle Test 123\"\n  },\n  \"items\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra sin ítems. Debería retornar 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Validación - quantity negativa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Test Usuario\",\n    \"email\": \"test@example.com\",\n    \"address\": \"Calle Test 123\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": -5\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra con cantidad negativa. Debería retornar 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Validación - quantity cero",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"Test Usuario\",\n    \"email\": \"test@example.com\",\n    \"address\": \"Calle Test 123\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra con cantidad cero. Debería retornar 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Error: Campos requeridos faltantes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": {\n    \"name\": \"\",\n    \"email\": \"\",\n    \"address\": \"\"\n  },\n  \"items\": [\n    {\n      \"bookId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Intenta crear una compra con campos de cliente vacíos. Debería retornar 400 Bad Request."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. GET Requests (Verificación)",
+			"item": [
+				{
+					"name": "GET - Listar todas las compras (con datos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases"
+							]
+						},
+						"description": "Obtiene la lista de todas las compras después de haber creado algunas. Debería retornar un array con las compras creadas."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener compra por ID (existente)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases/{{purchaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases",
+								"{{purchaseId}}"
+							]
+						},
+						"description": "Obtiene una compra específica por ID. Usa el ID guardado de una compra creada previamente.\n\n**Nota:** Debes ejecutar primero el POST que guarda el purchaseId en las variables de entorno."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener compra ID 1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases",
+								"1"
+							]
+						},
+						"description": "Obtiene la compra con ID 1 si existe."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener compra ID 2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases",
+								"2"
+							]
+						},
+						"description": "Obtiene la compra con ID 2 si existe."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener compra ID 3",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/purchases/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"purchases",
+								"3"
+							]
+						},
+						"description": "Obtiene la compra con ID 3 si existe."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8082",
+			"type": "string"
+		},
+		{
+			"key": "purchaseId",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

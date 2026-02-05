@@ -1,0 +1,249 @@
+# Colección de peticiones HTTP para probar ms-books-catalogue
+# Usar con REST Client de VS Code, IntelliJ HTTP Client, o adaptarlas para Postman
+
+### Variables
+@baseUrl = http://localhost:8081
+@contentType = application/json
+
+### ============================================
+### CRUD - Listar todos los libros (solo visibles)
+### ============================================
+GET {{baseUrl}}/books
+Accept: application/json
+
+### ============================================
+### CRUD - Obtener libro por ID
+### ============================================
+GET {{baseUrl}}/books/1
+Accept: application/json
+
+### ============================================
+### CRUD - Crear un nuevo libro
+### ============================================
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+
+{
+  "title": "El nombre del viento",
+  "author": "Patrick Rothfuss",
+  "publishedDate": "2007-03-27",
+  "category": "Fantasía",
+  "isbn": "978-84-8346-530-1",
+  "rating": 5,
+  "visible": true,
+  "stock": 20
+}
+
+### ============================================
+### CRUD - Crear libro con datos mínimos
+### ============================================
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+
+{
+  "title": "Dune",
+  "author": "Frank Herbert",
+  "category": "Ciencia Ficción",
+  "isbn": "978-0-441-17271-9",
+  "rating": 5
+}
+
+### ============================================
+### CRUD - Error: Crear libro sin título (validación)
+### ============================================
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+
+{
+  "author": "Autor sin título",
+  "category": "Test",
+  "isbn": "978-0-123-45678-9",
+  "rating": 3
+}
+
+### ============================================
+### CRUD - Error: Crear libro con ISBN duplicado
+### ============================================
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+
+{
+  "title": "Libro duplicado",
+  "author": "Autor X",
+  "category": "Test",
+  "isbn": "978-84-376-0494-7",
+  "rating": 3
+}
+
+### ============================================
+### CRUD - Actualizar libro completo (PUT)
+### ============================================
+PUT {{baseUrl}}/books/1
+Content-Type: {{contentType}}
+
+{
+  "title": "Don Quijote de la Mancha (Edición Especial)",
+  "author": "Miguel de Cervantes Saavedra",
+  "publishedDate": "1605-01-16",
+  "category": "Clásicos Españoles",
+  "isbn": "978-84-376-0494-7",
+  "rating": 5,
+  "visible": true,
+  "stock": 100
+}
+
+### ============================================
+### CRUD - Actualizar libro parcialmente (PATCH) - Solo stock
+### ============================================
+PATCH {{baseUrl}}/books/1
+Content-Type: {{contentType}}
+
+{
+  "stock": 150
+}
+
+### ============================================
+### CRUD - Actualizar libro parcialmente (PATCH) - Ocultar libro
+### ============================================
+PATCH {{baseUrl}}/books/2
+Content-Type: {{contentType}}
+
+{
+  "visible": false
+}
+
+### ============================================
+### CRUD - Actualizar libro parcialmente (PATCH) - Varios campos
+### ============================================
+PATCH {{baseUrl}}/books/3
+Content-Type: {{contentType}}
+
+{
+  "rating": 4,
+  "stock": 25,
+  "category": "Distopía Clásica"
+}
+
+### ============================================
+### CRUD - Eliminar libro
+### ============================================
+DELETE {{baseUrl}}/books/16
+
+### ============================================
+### CRUD - Error: Eliminar libro inexistente
+### ============================================
+DELETE {{baseUrl}}/books/9999
+
+### ============================================
+### BÚSQUEDA - Sin parámetros (todos los visibles)
+### ============================================
+GET {{baseUrl}}/books/search
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por título (parcial, case-insensitive)
+### ============================================
+GET {{baseUrl}}/books/search?title=quijote
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por autor (parcial)
+### ============================================
+GET {{baseUrl}}/books/search?author=garcía
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por autor (múltiples resultados)
+### ============================================
+GET {{baseUrl}}/books/search?author=tolkien
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por categoría (parcial)
+### ============================================
+GET {{baseUrl}}/books/search?category=clásicos
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por categoría Fantasía
+### ============================================
+GET {{baseUrl}}/books/search?category=fantasía
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por fecha de publicación (exacta)
+### ============================================
+GET {{baseUrl}}/books/search?publishedDate=1605-01-16
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por ISBN (exacto)
+### ============================================
+GET {{baseUrl}}/books/search?isbn=978-84-376-0494-7
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por rating 5
+### ============================================
+GET {{baseUrl}}/books/search?rating=5
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Por rating 4
+### ============================================
+GET {{baseUrl}}/books/search?rating=4
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Libros visibles explícitamente
+### ============================================
+GET {{baseUrl}}/books/search?visible=true
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Libros ocultos
+### ============================================
+GET {{baseUrl}}/books/search?visible=false
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA COMBINADA - Autor + Categoría
+### ============================================
+GET {{baseUrl}}/books/search?author=garcía&category=realismo
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA COMBINADA - Categoría + Rating
+### ============================================
+GET {{baseUrl}}/books/search?category=fantasía&rating=5
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA COMBINADA - Autor + Rating + Visible
+### ============================================
+GET {{baseUrl}}/books/search?author=tolkien&rating=5&visible=true
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA COMBINADA - Categoría + Rating + Stock disponible
+### ============================================
+GET {{baseUrl}}/books/search?category=distopía&rating=5
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA COMBINADA - Título + Autor (muy específico)
+### ============================================
+GET {{baseUrl}}/books/search?title=cien&author=garcía
+Accept: application/json
+
+### ============================================
+### BÚSQUEDA - Sin resultados
+### ============================================
+GET {{baseUrl}}/books/search?title=LibroQueNoExiste12345
+Accept: application/json
+
+### ============================================
+### HEALTH CHECK - Verificar que el servicio está corriendo
+### ============================================
+GET {{baseUrl}}/actuator/health
+Accept: application/json
