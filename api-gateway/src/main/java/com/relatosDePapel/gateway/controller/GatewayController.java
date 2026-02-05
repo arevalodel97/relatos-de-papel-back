@@ -5,6 +5,7 @@ import com.relatosDePapel.gateway.service.GatewayService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,22 +38,36 @@ public class GatewayController {
     @PostMapping(value = "/gateway",
                  consumes = MediaType.APPLICATION_JSON_VALUE,
                  produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<String>> handleGatewayRequest(
+    public Mono<ResponseEntity<Object>> handleGatewayRequest(
             @Valid @RequestBody GatewayRequestDTO requestDTO) {
 
-        log.info("Request recibido en gateway: method={}, path={}",
+        log.info("📥 [GATEWAY] Request recibido: method={}, path={}",
                  requestDTO.getMethod(),
                  requestDTO.getQueryParams().get("path"));
 
         return gatewayService.routeRequest(requestDTO)
-            .map(ResponseEntity::ok)
+            .map(response -> {
+                try {
+                    // Intentar parsear como JSON para retornarlo correctamente
+                    Object jsonResponse = new com.fasterxml.jackson.databind.ObjectMapper().readValue(response, Object.class);
+                    return ResponseEntity.ok(jsonResponse);
+                } catch (Exception e) {
+                    // Si no es JSON, retornar como string
+                    return ResponseEntity.ok((Object) response);
+                }
+            })
             .onErrorResume(error -> {
-                log.error("Error procesando request: {}", error.getMessage());
-                return Mono.just(
-                    ResponseEntity
-                        .badRequest()
-                        .body("{\"error\": \"" + error.getMessage() + "\"}")
-                );
+                log.error("❌ [GATEWAY ERROR] {}", error.getMessage(), error);
+
+                // Retornar error en formato estandarizado
+                return Mono.just(ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body((Object) new java.util.HashMap<String, String>() {{
+                        put("error", "Internal Server Error");
+                        put("message", error.getMessage());
+                        put("timestamp", java.time.Instant.now().toString());
+                        put("status", "500");
+                    }}));
             });
     }
 

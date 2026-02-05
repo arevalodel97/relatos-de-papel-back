@@ -53,10 +53,17 @@ management:
     gateway:
       enabled: true
 
-# Logging
+# Logging - Configuración limpia para ver el balanceo
 logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(---){faint} %clr([%-15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
   level:
-    root: INFO
-    com.relatosDePapel.gateway: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.web.reactive: DEBUG
+    root: WARN
+    com.relatosDePapel: INFO
+    # Silenciar logs innecesarios de Spring Cloud
+    org.springframework.cloud.gateway: WARN
+    org.springframework.web.reactive: WARN
+    org.springframework.cloud.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    reactor.netty: WARN
+    io.netty: WARN
