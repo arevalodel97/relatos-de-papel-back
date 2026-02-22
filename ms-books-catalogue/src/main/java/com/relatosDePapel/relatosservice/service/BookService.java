@@ -2,17 +2,13 @@ package com.relatosDePapel.relatosservice.service;
 
 import com.relatosDePapel.relatosservice.dto.*;
 
-import java.util.List;
-
 /**
  * Servicio para la gestión de libros
  */
 public interface BookService {
 
-    /**
-     * Listar todos los libros (solo visibles por defecto)
-     */
-    List<BookResponseDTO> getAllBooks();
+    /** GET /books sin filtros → todos los visibles + facets globales */
+    BookSearchResponseDTO getAllBooks();
 
     /**
      * Buscar libro por ID
@@ -39,8 +35,8 @@ public interface BookService {
      */
     void deleteBook(Long id);
 
-    /**
-     * Buscar libros con filtros combinados (0..N parámetros)
-     */
-    List<BookResponseDTO> searchBooks(BookSearchParamsDTO params);
+    /** GET /books con filtros o GET /books/search → libros filtrados + facets de esos resultados */
+    BookSearchResponseDTO searchBooks(BookSearchParamsDTO params);
+
+    BookFacetsDTO getFacets();
 }

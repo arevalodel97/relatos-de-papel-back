@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,9 +16,6 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Servicio que maneja el enrutamiento dinámico a través del gateway
- */
 @Service
 public class GatewayService {
 
@@ -39,29 +35,18 @@ public class GatewayService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Procesa el request del frontend y lo enruta al microservicio correspondiente
-     *
-     * @param requestDTO DTO con method, queryParams y body
-     * @return Mono con la respuesta del microservicio destino
-     */
     public Mono<String> routeRequest(GatewayRequestDTO requestDTO) {
-        // 1. Validar que queryParams contenga 'path'
         String path = requestDTO.getQueryParams().get("path");
         if (path == null || path.isBlank()) {
             return Mono.error(new IllegalArgumentException(
                 "El campo 'path' es obligatorio dentro de 'queryParams'"));
         }
 
-        // 2. Determinar el servicio destino según el path
         String targetService = determineTargetService(path);
-
-        // 3. Obtener el método HTTP
         HttpMethod httpMethod = HttpMethod.valueOf(requestDTO.getMethod());
 
         log.info("🔀 [GATEWAY ROUTE] {} {} → {}", httpMethod, path, targetService);
 
-        // Log body si existe
         if (requestDTO.getBody() != null) {
             try {
                 String bodyJson = objectMapper.writeValueAsString(requestDTO.getBody());
@@ -71,13 +56,9 @@ public class GatewayService {
             }
         }
 
-        // 4. Construir y ejecutar la petición
         return executeRequest(targetService, path, requestDTO.getQueryParams(), httpMethod, requestDTO.getBody());
     }
 
-    /**
-     * Determina el servicio destino basado en el path
-     */
     private String determineTargetService(String path) {
         if (path.startsWith("/books")) {
             return catalogueServiceName;
@@ -89,14 +70,10 @@ public class GatewayService {
         }
     }
 
-    /**
-     * Ejecuta el request HTTP usando WebClient reactivo
-     */
     private Mono<String> executeRequest(String serviceName, String path, Map<String, String> queryParams,
                                         HttpMethod method, Object body) {
         WebClient webClient = webClientBuilder.build();
 
-        // Construir la URI base con load balancing
         String baseUri = "lb://" + serviceName + path;
 
         log.info("🌐 [GATEWAY] URI: {}", baseUri);
@@ -108,7 +85,6 @@ public class GatewayService {
         WebClient.RequestBodySpec requestSpec = webClient
             .method(method)
             .uri(baseUri, uriBuilder -> {
-                // Agregar query params (WebClient los codifica automáticamente)
                 queryParams.forEach((key, value) -> {
                     if (!"path".equals(key) && value != null && !value.isBlank()) {
                         uriBuilder.queryParam(key, value);
@@ -119,7 +95,6 @@ public class GatewayService {
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
-        // Solo incluir body para POST, PUT, PATCH
         if (body != null && (method == HttpMethod.POST ||
                              method == HttpMethod.PUT ||
                              method == HttpMethod.PATCH)) {
@@ -144,9 +119,6 @@ public class GatewayService {
         }
     }
 
-    /**
-     * Maneja errores de forma más detallada
-     */
     private Mono<String> handleError(Throwable error) {
         if (error instanceof WebClientResponseException) {
             WebClientResponseException wcre = (WebClientResponseException) error;
@@ -155,7 +127,6 @@ public class GatewayService {
 
             log.error("❌ [GATEWAY ERROR] Status: {} | Body: {}", status, errorBody);
 
-            // Retornar el error del microservicio tal como viene
             return Mono.just(errorBody);
         } else {
             log.error("❌ [GATEWAY ERROR] Tipo desconocido: {}", error.getClass().getSimpleName(), error);
@@ -163,4 +134,3 @@ public class GatewayService {
         }
     }
 }
-

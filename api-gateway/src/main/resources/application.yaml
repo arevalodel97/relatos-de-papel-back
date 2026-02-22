@@ -4,15 +4,28 @@ server:
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
-      # Deshabilitamos las rutas automáticas porque usaremos programación custom
       discovery:
         locator:
           enabled: false
-
-      # Configuración global
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "${FRONTEND_URL:http://localhost:5173}"
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
       default-filters:
         - name: Retry
           args:
@@ -23,7 +36,6 @@ spring:
               firstBackoff: 50ms
               maxBackoff: 500ms
 
-# Configuración de Eureka Client
 eureka:
   client:
     enabled: ${EUREKA_ENABLED:true}
@@ -33,15 +45,13 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
+    instance-id: api-gateway:8080
 
-# Nombres de los microservicios en Eureka (configurables)
 gateway:
   services:
     catalogue: ${CATALOGUE_SERVICE_NAME:ms-books-catalogue}
     payments: ${PAYMENTS_SERVICE_NAME:ms-books-payments}
 
-# Actuator
 management:
   endpoints:
     web:
@@ -53,14 +63,12 @@ management:
     gateway:
       enabled: true
 
-# Logging - Configuración limpia para ver el balanceo
 logging:
   pattern:
     console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(---){faint} %clr([%-15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
   level:
     root: WARN
     com.relatosDePapel: INFO
-    # Silenciar logs innecesarios de Spring Cloud
     org.springframework.cloud.gateway: WARN
     org.springframework.web.reactive: WARN
     org.springframework.cloud.netflix.eureka: WARN

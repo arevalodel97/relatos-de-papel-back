@@ -1,0 +1,39 @@
+# Compiled class files
+*.class
+target/
+*.jar
+*.war
+*.ear
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+# Maven
+.mvn/
+!**/src/main/**/target/
+!**/src/test/**/target/
+# Logs
+*.log
+logs/
+*.log.*
+# OS files
+.DS_Store
+Thumbs.db
+# Environment variables
+.env
+.env.local
+# Spring Boot
+spring-boot-*.log
+# H2 Database
+*.db
+*.trace.db
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~

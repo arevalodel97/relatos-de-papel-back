@@ -1,26 +1,23 @@
 spring:
   application:
     name: ms-books-payments
-
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:payments_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${PAYMENTS_DB_NAME:payments_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: ${HIBERNATE_DDL_AUTO:update}
-    show-sql: ${SHOW_SQL:true}
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+        format_sql: false
 
 server:
   port: ${SERVER_PORT:8082}
 
-# Configuración de Eureka Client
 eureka:
   client:
     enabled: ${EUREKA_ENABLED:true}
@@ -33,12 +30,10 @@ eureka:
     hostname: localhost
     instance-id: ${spring.application.name}:${server.port}
 
-# Nombre del servicio de catálogo (nombre registrado en Eureka)
 catalogue:
   service:
     name: ${CATALOGUE_SERVICE_NAME:ms-books-catalogue}
 
-# Configuración de Swagger/OpenAPI
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -58,6 +53,14 @@ management:
       show-details: always
 
 logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(---){faint} %clr([%-15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
   level:
-    root: ${LOG_LEVEL:INFO}
-    com.relatosDePapel.payments: ${LOG_LEVEL:INFO}
+    root: WARN
+    com.relatosDePapel: INFO
+    org.springframework.web: WARN
+    org.springframework.cloud.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN

@@ -1,3 +1,4 @@
+com/relatosDePapel/gateway/config/CorsConfig.class
 com/relatosDePapel/gateway/service/GatewayService.class
 com/relatosDePapel/gateway/controller/GatewayController.class
 com/relatosDePapel/gateway/ApiGatewayApplication.class

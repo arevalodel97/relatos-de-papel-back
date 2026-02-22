@@ -1,91 +1,78 @@
 package com.relatosDePapel.relatosservice.mapper;
 
+import com.relatosDePapel.relatosservice.document.BookDocument;
 import com.relatosDePapel.relatosservice.dto.*;
-import com.relatosDePapel.relatosservice.entity.Book;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BookMapper {
 
-    public Book toEntity(BookCreateRequestDTO dto) {
-        Book book = new Book();
-        book.setTitle(dto.getTitle());
-        book.setAuthor(dto.getAuthor());
-        book.setPublishedDate(dto.getPublishedDate());
-        book.setPages(dto.getPages() != null ? dto.getPages() : Integer.valueOf(1));
-        book.setCategory(dto.getCategory());
-        // No formatear ISBN aquí: la validación del DTO exige el formato con guiones
-        book.setIsbn(dto.getIsbn());
-        book.setRating(dto.getRating());
-        book.setVisible(dto.getVisible() != null ? dto.getVisible() : Boolean.TRUE);
-        book.setStock(dto.getStock() != null ? dto.getStock() : Integer.valueOf(0));
-        book.setDescription(dto.getDescription());
-        return book;
+    public BookDocument toDocument(BookCreateRequestDTO dto, Long id) {
+        BookDocument doc = new BookDocument();
+        doc.setId(id);
+        doc.setTitle(dto.getTitle());
+        doc.setAuthor(dto.getAuthor());
+        doc.setPublicationDate(dto.getPublicationDate());
+        doc.setPages(dto.getPages() != null ? dto.getPages() : 1);
+        doc.setCategory(dto.getCategory());
+        doc.setIsbn(dto.getIsbn());
+        doc.setRating(dto.getRating());
+        doc.setVisible(dto.getVisible() != null ? dto.getVisible() : Boolean.TRUE);
+        doc.setStock(dto.getStock() != null ? dto.getStock() : 0);
+        doc.setDescription(dto.getDescription());
+        doc.setPrice(dto.getPrice());
+        doc.setPhoto(dto.getPhoto());
+        return doc;
     }
 
-    public Book toEntity(BookUpdateRequestDTO dto, Long id) {
-        Book book = new Book();
-        book.setId(id);
-        book.setTitle(dto.getTitle());
-        book.setAuthor(dto.getAuthor());
-        book.setPublishedDate(dto.getPublishedDate());
-        book.setPages(dto.getPages());
-        book.setCategory(dto.getCategory());
-        book.setIsbn(dto.getIsbn());
-        book.setRating(dto.getRating());
-        book.setVisible(dto.getVisible());
-        book.setStock(dto.getStock());
-        book.setDescription(dto.getDescription());
-        return book;
+    public BookDocument toDocument(BookUpdateRequestDTO dto, Long id) {
+        BookDocument doc = new BookDocument();
+        doc.setId(id);
+        doc.setTitle(dto.getTitle());
+        doc.setAuthor(dto.getAuthor());
+        doc.setPublicationDate(dto.getPublicationDate());
+        doc.setPages(dto.getPages());
+        doc.setCategory(dto.getCategory());
+        doc.setIsbn(dto.getIsbn());
+        doc.setRating(dto.getRating());
+        doc.setVisible(dto.getVisible());
+        doc.setStock(dto.getStock());
+        doc.setDescription(dto.getDescription());
+        doc.setPrice(dto.getPrice());
+        doc.setPhoto(dto.getPhoto());
+        return doc;
     }
 
-    public void updateFromPatchDTO(Book book, BookPatchRequestDTO dto) {
-        if (dto.getTitle() != null) {
-            book.setTitle(dto.getTitle());
-        }
-        if (dto.getAuthor() != null) {
-            book.setAuthor(dto.getAuthor());
-        }
-        if (dto.getPublishedDate() != null) {
-            book.setPublishedDate(dto.getPublishedDate());
-        }
-        if (dto.getPages() != null) {
-            book.setPages(dto.getPages());
-        }
-        if (dto.getCategory() != null) {
-            book.setCategory(dto.getCategory());
-        }
-        if (dto.getIsbn() != null) {
-            // Mantener tal cual: el DTO ya valida el formato con guiones
-            book.setIsbn(dto.getIsbn());
-        }
-        if (dto.getRating() != null) {
-            book.setRating(dto.getRating());
-        }
-        if (dto.getVisible() != null) {
-            book.setVisible(dto.getVisible());
-        }
-        if (dto.getStock() != null) {
-            book.setStock(dto.getStock());
-        }
-        if (dto.getDescription() != null) {
-            book.setDescription(dto.getDescription());
-        }
+    public void updateFromPatchDTO(BookDocument doc, BookPatchRequestDTO dto) {
+        if (dto.getTitle() != null) doc.setTitle(dto.getTitle());
+        if (dto.getAuthor() != null) doc.setAuthor(dto.getAuthor());
+        if (dto.getPublicationDate() != null) doc.setPublicationDate(dto.getPublicationDate());
+        if (dto.getPages() != null) doc.setPages(dto.getPages());
+        if (dto.getCategory() != null) doc.setCategory(dto.getCategory());
+        if (dto.getIsbn() != null) doc.setIsbn(dto.getIsbn());
+        if (dto.getRating() != null) doc.setRating(dto.getRating());
+        if (dto.getVisible() != null) doc.setVisible(dto.getVisible());
+        if (dto.getStock() != null) doc.setStock(dto.getStock());
+        if (dto.getDescription() != null) doc.setDescription(dto.getDescription());
+        if (dto.getPrice() != null) doc.setPrice(dto.getPrice());
+        if (dto.getPhoto() != null) doc.setPhoto(dto.getPhoto());
     }
 
-    public BookResponseDTO toResponseDTO(Book book) {
+    public BookResponseDTO toResponseDTO(BookDocument doc) {
         BookResponseDTO dto = new BookResponseDTO();
-        dto.setId(book.getId());
-        dto.setTitle(book.getTitle());
-        dto.setAuthor(book.getAuthor());
-        dto.setPublishedDate(book.getPublishedDate());
-        dto.setPages(book.getPages());
-        dto.setCategory(book.getCategory());
-        dto.setIsbn(book.getIsbn());
-        dto.setRating(book.getRating());
-        dto.setVisible(book.getVisible());
-        dto.setStock(book.getStock());
-        dto.setDescription(book.getDescription());
+        dto.setId(doc.getId());
+        dto.setTitle(doc.getTitle());
+        dto.setAuthor(doc.getAuthor());
+        dto.setPublicationDate(doc.getPublicationDate());
+        dto.setPages(doc.getPages());
+        dto.setCategory(doc.getCategory());
+        dto.setIsbn(doc.getIsbn());
+        dto.setRating(doc.getRating());
+        dto.setVisible(doc.getVisible());
+        dto.setStock(doc.getStock());
+        dto.setDescription(doc.getDescription());
+        dto.setPrice(doc.getPrice());
+        dto.setPhoto(doc.getPhoto());
         return dto;
     }
 }

@@ -1,4 +1,4 @@
-package com.relatosDePapel.payments.interceptor;
+package com.relatosDePapel.relatosservice.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,7 +32,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
 
         String queryString = params.length() > 0 ? params.substring(0, params.length() - 1) : "none";
 
-        log.info("💳 [PAYMENTS:{}] {} {} | Params: {}",
+        log.info("📘 [CATALOGUE:{}] {} {} | Params: {}",
             serverPort,
             request.getMethod(),
             request.getRequestURI(),
@@ -47,7 +47,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         long startTime = (Long) request.getAttribute("startTime");
         long duration = System.currentTimeMillis() - startTime;
 
-        log.info("✅ [PAYMENTS:{}] {} {} | Status: {} | Duration: {}ms",
+        log.info("✅ [CATALOGUE:{}] {} {} | Status: {} | Duration: {}ms",
             serverPort,
             request.getMethod(),
             request.getRequestURI(),

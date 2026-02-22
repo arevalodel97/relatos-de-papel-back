@@ -1,6 +1,7 @@
 package com.relatosDePapel.relatosservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 
@@ -9,27 +10,43 @@ public class BookSearchParamsDTO {
     private String title;
     private String author;
 
+    @JsonProperty("publication_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate publishedDate;
+    private LocalDate publicationDate;
 
     private String category;
     private String isbn;
     private Integer rating;
     private Boolean visible;
 
+    /** Filtro de stock: true = solo con stock > 0, false = solo sin stock, null = todos */
+    private Boolean inStock;
+
+    /** Rango de precios */
+    private Float minPrice;
+    private Float maxPrice;
+
+    /** Paginación */
+    private int page = 0;
+    private int size = 10;
+
     // Constructors
     public BookSearchParamsDTO() {
     }
 
-    public BookSearchParamsDTO(String title, String author, LocalDate publishedDate,
-                              String category, String isbn, Integer rating, Boolean visible) {
+    public BookSearchParamsDTO(String title, String author, LocalDate publicationDate,
+                              String category, String isbn, Integer rating, Boolean visible,
+                              Boolean inStock, Float minPrice, Float maxPrice) {
         this.title = title;
         this.author = author;
-        this.publishedDate = publishedDate;
+        this.publicationDate = publicationDate;
         this.category = category;
         this.isbn = isbn;
         this.rating = rating;
         this.visible = visible;
+        this.inStock = inStock;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
     }
 
     // Getters and Setters
@@ -49,12 +66,12 @@ public class BookSearchParamsDTO {
         this.author = author;
     }
 
-    public LocalDate getPublishedDate() {
-        return publishedDate;
+    public LocalDate getPublicationDate() {
+        return publicationDate;
     }
 
-    public void setPublishedDate(LocalDate publishedDate) {
-        this.publishedDate = publishedDate;
+    public void setPublicationDate(LocalDate publicationDate) {
+        this.publicationDate = publicationDate;
     }
 
     public String getCategory() {
@@ -87,5 +104,45 @@ public class BookSearchParamsDTO {
 
     public void setVisible(Boolean visible) {
         this.visible = visible;
+    }
+
+    public Boolean getInStock() {
+        return inStock;
+    }
+
+    public void setInStock(Boolean inStock) {
+        this.inStock = inStock;
+    }
+
+    public Float getMinPrice() {
+        return minPrice;
+    }
+
+    public void setMinPrice(Float minPrice) {
+        this.minPrice = minPrice;
+    }
+
+    public Float getMaxPrice() {
+        return maxPrice;
+    }
+
+    public void setMaxPrice(Float maxPrice) {
+        this.maxPrice = maxPrice;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 }

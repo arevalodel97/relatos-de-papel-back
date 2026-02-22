@@ -1,0 +1,1232 @@
+{
+  "info": {
+    "_postman_id": "4bc57cb3-85e3-4902-b3dd-62be2d6f357a",
+    "name": "API Gateway - Unified Tests (Books + Payments)",
+    "description": "Colección completa para probar todos los endpoints de ms-books-catalogue y ms-books-payments a través del API Gateway. Todas las peticiones usan POST /api/gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "10962243"
+  },
+  "item": [
+    {
+      "name": "00 - Setup",
+      "item": [
+        {
+          "name": "Setup - Generar ISBN y datos únicos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generar ISBN-13 válido con guiones",
+                  "const ts12 = Date.now().toString().slice(-12);",
+                  "const base12 = ts12.padStart(12, '0');",
+                  "let sum = 0;",
+                  "for (let i = 0; i < 12; i++) {",
+                  "  const d = parseInt(base12.charAt(i), 10);",
+                  "  sum += d * (i % 2 === 0 ? 1 : 3);",
+                  "}",
+                  "const check = (10 - (sum % 10)) % 10;",
+                  "const isbn13 = base12 + check;",
+                  "const formatted = isbn13.substring(0,3) + '-' + isbn13.charAt(3) + '-' + isbn13.substring(4,7) + '-' + isbn13.substring(7,12) + '-' + isbn13.charAt(12);",
+                  "",
+                  "pm.environment.set('uniqueIsbn', isbn13);",
+                  "pm.environment.set('uniqueIsbnFormatted', formatted);",
+                  "pm.environment.set('uniqueTitle', 'Libro Gateway ' + Date.now());",
+                  "pm.environment.set('customerName', 'Cliente Test ' + Date.now());",
+                  "pm.environment.set('customerEmail', 'test' + Date.now() + '@example.com');",
+                  "",
+                  "console.log('✅ Variables generadas:');",
+                  "console.log('ISBN:', formatted);",
+                  "console.log('Título:', pm.environment.get('uniqueTitle'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Variables configuradas correctamente', () => {",
+                  "  pm.expect(pm.environment.get('uniqueIsbnFormatted')).to.be.a('string');",
+                  "  pm.expect(pm.environment.get('uniqueTitle')).to.be.a('string');",
+                  "  pm.expect(pm.environment.get('customerName')).to.be.a('string');",
+                  "  pm.expect(pm.environment.get('customerEmail')).to.match(/^.+@.+\\..+$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Books Catalogue - GET",
+      "item": [
+        {
+          "name": "GET - Listar todos los libros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Respuesta es array u objeto', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json === null || typeof json === 'object').to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Buscar por título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.eql(200));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"title\": \"Don Quijote de la Mancha\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Búsqueda avanzada (múltiples filtros)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/search\",\n    \"title\": \"Don Quijote de la Mancha\",\n    \"author\": \"Miguel de Cervantes\",\n    \"category\": \"Clásicos\",\n    \"isbn\": \"978-84-376-0494-7\",\n    \"rating\": \"5\",\n    \"visible\": \"true\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Books Catalogue - POST",
+      "item": [
+        {
+          "name": "POST - Crear libro válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 201', () => pm.expect([200, 201]).to.include(pm.response.code));",
+                  "const json = pm.response.json();",
+                  "pm.test('Tiene ID e ISBN formateado', () => {",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json).to.have.property('isbn');",
+                  "  pm.expect(json.isbn).to.eql(pm.environment.get('uniqueIsbnFormatted'));",
+                  "});",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  pm.environment.set('createdBookId', json.id + '');",
+                  "  pm.environment.set('createdBookISBN', json.isbn + '');",
+                  "  console.log('✅ Libro creado - ID:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"title\": \"{{uniqueTitle}}\",\n    \"author\": \"Autor Gateway Test create\",\n    \"isbn\": \"{{uniqueIsbnFormatted}}\",\n    \"pages\": 250,\n    \"description\": \"Libro de prueba desde API Gateway\",\n    \"rating\": 5,\n    \"category\": \"Test createGateway\",\n    \"stock\": 15,\n    \"visible\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - ISBN duplicado → 409/400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 o 409', () => pm.expect([400, 409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"title\": \"Duplicado\",\n    \"author\": \"Autor\",\n    \"isbn\": \"{{uniqueIsbnFormatted}}\",\n    \"pages\": 100,\n    \"rating\": 3,\n    \"category\": \"Test\",\n    \"stock\": 5,\n    \"visible\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Campos requeridos faltantes → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 o 422', () => pm.expect([400, 422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"author\": \"Solo autor sin título ni ISBN\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Books Catalogue - PUT/PATCH",
+      "item": [
+        {
+          "name": "PUT - Actualizar libro completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 204', () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"title\": \"{{uniqueTitle}} - EDITADO\",\n    \"author\": \"Autor Actualizado Gateway\",\n    \"isbn\": \"978-4-204-83869-1\",\n    \"pages\": 300,\n    \"description\": \"Descripción actualizada desde Gateway\",\n    \"rating\": 5,\n    \"category\": \"Test Gateway Updated\",\n    \"stock\": 20,\n    \"visible\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT - Páginas negativas → 400/422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 o 422', () => pm.expect([400, 422]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"title\": \"Inválido\",\n    \"author\": \"A\",\n    \"isbn\": \"978-84-204-3869-1\",\n    \"pages\": -50\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Actualización parcial (páginas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 204', () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"pages\": 351\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Payments - GET",
+      "item": [
+        {
+          "name": "GET - Listar todas las compras",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Respuesta es array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Compra por ID (existente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.test('Tiene id y status', () => {",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('status');",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/1\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Compra inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/999999\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Payments - POST",
+      "item": [
+        {
+          "name": "POST - Crear compra válida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.eql(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Tiene id y status', () => {",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('lastPurchaseId', json.id + '');",
+                  "  console.log('✅ Compra creada - ID:', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"testPayment 1\",\n      \"email\": \"test@pyment1.com\",\n      \"address\": \"Calle Gateway 123\"\n    },\n    \"items\": [\n      {\n        \"bookId\": \"{{createdBookId}}\",\n        \"quantity\": 1\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Libro inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"Ana García\",\n      \"email\": \"ana@example.com\",\n      \"address\": \"C/ Falsa 1\"\n    },\n    \"items\": [\n      {\n        \"bookId\": 999999,\n        \"quantity\": 1\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Stock insuficiente → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.expect(pm.response.code).to.eql(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"María López\",\n      \"email\": \"maria@example.com\",\n      \"address\": \"Av. Stock 5\"\n    },\n    \"items\": [\n      {\n        \"bookId\": \"{{createdBookId}}\",\n        \"quantity\": 9999\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Payments - PUT/PATCH",
+      "item": [
+        {
+          "name": "PUT - Reemplazar compra completa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 404', () => pm.expect([200,404]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/3\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"Cliente Modificado\",\n      \"email\": \"modificado@example.com\",\n      \"address\": \"Nueva Dirección 1\"\n    },\n    \"items\": [\n      {\n        \"bookId\": \"{{createdBookId}}\",\n        \"quantity\": 1\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT - Compra inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/999999\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"X\",\n      \"email\": \"x@example.com\",\n      \"address\": \"N/A\"\n    },\n    \"items\": [\n      {\n        \"bookId\": 1,\n        \"quantity\": 1\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Actualizar estado de compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200, 404 o 409', () => pm.expect([200,404,409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/{{lastPurchaseId}}\"\n  },\n  \"body\": {\n    \"status\": \"CANCELLED\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Estado inválido → 400/409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400, 409 o 404', () => pm.expect([400,409,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/{{lastPurchaseId}}\"\n  },\n  \"body\": {\n    \"status\": \"INVALID_STATUS\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - DELETE Operations",
+      "item": [
+        {
+          "name": "DELETE - Eliminar compra existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204, 200 o 404', () => pm.expect([204,200,404]).to.include(pm.response.code));",
+                  "if (pm.response.code === 204 || pm.response.code === 200) {",
+                  "  pm.environment.unset('lastPurchaseId');",
+                  "  console.log('✅ Compra eliminada');",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE - Compra inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/999999\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE - Eliminar libro creado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 o 204', () => pm.expect([200, 204]).to.include(pm.response.code));",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "  pm.environment.unset('createdBookId');",
+                  "  pm.environment.unset('createdBookISBN');",
+                  "  console.log('✅ Libro eliminado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - Error Handling",
+      "item": [
+        {
+          "name": "Request sin método → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"queryParams\": {\n    \"path\": \"/books\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request sin path → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {}\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ruta inexistente → 404/500",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404 o 500', () => pm.expect([404, 500]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/ruta-que-no-existe\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}/api/gateway",
+              "host": [
+                "{{gatewayUrl}}"
+              ],
+              "path": [
+                "api",
+                "gateway"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "GET - Libro por ID (existente)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 o 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) {",
+              "  const json = pm.response.json();",
+              "  pm.test('Tiene id e isbn', () => {",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json).to.have.property('isbn');",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{gatewayUrl}}/api/gateway",
+          "host": [
+            "{{gatewayUrl}}"
+          ],
+          "path": [
+            "api",
+            "gateway"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "uniqueIsbn",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "uniqueIsbnFormatted",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "uniqueTitle",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdBookId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdBookISBN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lastPurchaseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerName",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerEmail",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

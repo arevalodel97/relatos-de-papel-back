@@ -1,0 +1,529 @@
+{
+  "info": {
+    "name": "API Gateway - Colección Completa",
+    "_postman_id": "api-gateway-full-v1",
+    "description": "Todas las operaciones de catálogo y pagos pasando por el API Gateway en POST /api/gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "gatewayUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "createdBookId", "value": "", "type": "string" },
+    { "key": "autoIsbn", "value": "", "type": "string" },
+    { "key": "autoBookId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "── HEALTH ───────────────────────────────",
+      "item": [
+        {
+          "name": "00 - Gateway Health Check",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{gatewayUrl}}/api/health", "host": ["{{gatewayUrl}}"], "path": ["api","health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - GET /books ─────────────────",
+      "item": [
+        {
+          "name": "01 - Listar todos (página 0)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Tiene books, facets y paginación', () => {",
+            "  const b = pm.response.json();",
+            "  pm.expect(b).to.have.property('books');",
+            "  pm.expect(b).to.have.property('facets');",
+            "  pm.expect(b).to.have.property('totalElements');",
+            "  pm.expect(b).to.have.property('currentPage');",
+            "});",
+            "pm.test('Máximo 10 libros', () => pm.expect(pm.response.json().books.length).to.be.at.most(10));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "02 - Página 1",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('currentPage es 1', () => pm.expect(pm.response.json().currentPage).to.equal(1));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"page\": \"1\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "03 - Filtrar por categoría (Ficción)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Todos son Ficción', () => pm.response.json().books.forEach(b => pm.expect(b.category).to.equal('Ficción')));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"category\": \"Ficción\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "04 - Filtrar por rating 5",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Todos tienen rating 5', () => pm.response.json().books.forEach(b => pm.expect(b.rating).to.equal(5)));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"rating\": \"5\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "05 - Filtrar solo con stock",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Todos tienen stock > 0', () => pm.response.json().books.forEach(b => pm.expect(b.stock).to.be.greaterThan(0)));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"inStock\": \"true\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "06 - Filtrar por rango de precio (10-17)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Precios en rango', () => pm.response.json().books.forEach(b => { pm.expect(b.price).to.be.at.least(10); pm.expect(b.price).to.be.at.most(17); }));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"minPrice\": \"10\",\n    \"maxPrice\": \"17\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "07 - Buscar por título (title=Cien)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Al menos 1 resultado', () => pm.expect(pm.response.json().books.length).to.be.greaterThan(0));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"title\": \"Cien\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "08 - Buscar por autor (García Márquez)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Al menos 1 resultado', () => pm.expect(pm.response.json().books.length).to.be.greaterThan(0));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"author\": \"García Márquez\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "09 - Búsqueda con typo (Garsia Marquez)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Fuzziness tolera el typo', () => pm.expect(pm.response.json().books.length).to.be.greaterThan(0));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"author\": \"Garsia Marquez\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "10 - Sin resultados → books vacío",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('books vacío y totalElements 0', () => { pm.expect(pm.response.json().books).to.be.empty; pm.expect(pm.response.json().totalElements).to.equal(0); });"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"title\": \"xyzlibroinexistente999\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - GET /books/{id} ────────────",
+      "item": [
+        {
+          "name": "11 - Obtener libro existente (ID 1)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Es el libro correcto', () => {",
+            "  const b = pm.response.json();",
+            "  pm.expect(b.id).to.equal(1);",
+            "  pm.expect(b.title).to.equal('Cien años de soledad');",
+            "});"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/1\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "12 - Obtener libro que no existe → 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/99999\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - POST /books ────────────────",
+      "item": [
+        {
+          "name": "13 - Crear libro válido → 201",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Libro creado con ID', () => {",
+            "  const b = pm.response.json();",
+            "  pm.expect(b).to.have.property('id');",
+            "  pm.expect(b.title).to.equal('Libro Gateway Test');",
+            "  pm.collectionVariables.set('createdBookId', b.id);",
+            "  console.log('ID creado:', b.id);",
+            "});"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"title\": \"Libro Gateway Test\",\n    \"author\": \"Autor Gateway\",\n    \"isbn\": \"978-9-999-99991-0\",\n    \"pages\": 200,\n    \"description\": \"Libro creado vía API Gateway\",\n    \"rating\": 4,\n    \"category\": \"Ficción\",\n    \"stock\": 15,\n    \"visible\": true,\n    \"publication_date\": \"2024-01-01\",\n    \"price\": 12.99,\n    \"photo\": \"https://covers.openlibrary.org/b/id/1234-L.jpg\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "14 - Crear con ISBN duplicado → 409",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 409', () => pm.response.to.have.status(409));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"title\": \"Duplicado\",\n    \"author\": \"Autor\",\n    \"isbn\": \"978-0-06-088328-7\",\n    \"pages\": 100,\n    \"rating\": 3,\n    \"category\": \"Ficción\",\n    \"stock\": 5\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - PUT /books/{id} ────────────",
+      "item": [
+        {
+          "name": "15 - Actualización completa → 200",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Campos actualizados', () => {",
+            "  const b = pm.response.json();",
+            "  pm.expect(b.title).to.equal('Libro Gateway Test - EDITADO');",
+            "  pm.expect(b.price).to.equal(19.99);",
+            "});"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"title\": \"Libro Gateway Test - EDITADO\",\n    \"author\": \"Autor Gateway Editado\",\n    \"isbn\": \"978-9-999-99991-0\",\n    \"pages\": 300,\n    \"description\": \"Actualizado vía PUT por Gateway\",\n    \"rating\": 5,\n    \"category\": \"Ciencia Ficción\",\n    \"stock\": 30,\n    \"visible\": true,\n    \"publication_date\": \"2024-06-01\",\n    \"price\": 19.99,\n    \"photo\": \"https://covers.openlibrary.org/b/id/5678-L.jpg\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "16 - PUT libro no existe → 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/books/99999\"\n  },\n  \"body\": {\n    \"title\": \"No existe\",\n    \"author\": \"Nadie\",\n    \"isbn\": \"978-0-000-00000-0\",\n    \"pages\": 100,\n    \"rating\": 3,\n    \"category\": \"Ficción\",\n    \"stock\": 0,\n    \"visible\": true\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - PATCH /books/{id} ──────────",
+      "item": [
+        {
+          "name": "17 - Actualizar solo stock",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Stock actualizado', () => pm.expect(pm.response.json().stock).to.equal(99));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"stock\": 99\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "18 - Ocultar libro (visible=false)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('visible es false', () => pm.expect(pm.response.json().visible).to.be.false);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"visible\": false\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "19 - Restaurar visible=true",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('visible es true', () => pm.expect(pm.response.json().visible).to.be.true);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  },\n  \"body\": {\n    \"visible\": true\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── CATÁLOGO - DELETE /books/{id} ─────────",
+      "item": [
+        {
+          "name": "20 - Eliminar libro (soft delete) → 204",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 204', () => pm.response.to.have.status(204));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/books/{{createdBookId}}\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "21 - DELETE libro no existe → 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/books/99999\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── PAGOS - /payments ─────────────────────",
+      "item": [
+        {
+          "name": "22 - Listar todos los pagos",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "23 - Crear pago",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200 o 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases\"\n  },\n  \"body\": {\n    \"customer\": {\n      \"name\": \"Juan García\",\n      \"email\": \"juan@email.com\",\n      \"address\": \"Calle Mayor 1\"\n    },\n    \"items\": [\n      { \"bookId\": 1, \"quantity\": 1 }\n    ]\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "24 - Obtener pago por ID",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/payments/purchases/1\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── FLUJO AUTOMATIZADO VÍA GATEWAY ────────",
+      "item": [
+        {
+          "name": "AUTO-01 - GET libro no existe todavía",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": [
+                "function randDigits(n) { let s=''; for(let i=0;i<n;i++) s+=Math.floor(Math.random()*10); return s; }",
+                "const isbn = `${randDigits(3)}-${randDigits(1)}-${randDigits(3)}-${randDigits(5)}-${randDigits(1)}`;",
+                "pm.collectionVariables.set('autoIsbn', isbn);",
+                "pm.collectionVariables.set('autoBookId', '');",
+                "console.log('ISBN generado:', isbn);"
+              ], "type": "text/javascript" }
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "pm.test('ISBN no existe aún', () => {",
+                "  const isbn = pm.collectionVariables.get('autoIsbn');",
+                "  const found = pm.response.json().books.some(b => b.isbn === isbn);",
+                "  pm.expect(found).to.be.false;",
+                "});"
+              ], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books\",\n    \"isbn\": \"{{autoIsbn}}\",\n    \"page\": \"0\",\n    \"size\": \"10\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-02 - POST crear libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                "pm.test('Guardar ID', () => {",
+                "  const id = pm.response.json().id;",
+                "  pm.expect(id).to.exist;",
+                "  pm.collectionVariables.set('autoBookId', id);",
+                "  console.log('ID guardado:', id);",
+                "});"
+              ], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"POST\",\n  \"queryParams\": {\n    \"path\": \"/books\"\n  },\n  \"body\": {\n    \"title\": \"Auto Test Gateway\",\n    \"author\": \"Autor Auto\",\n    \"isbn\": \"{{autoIsbn}}\",\n    \"pages\": 100,\n    \"description\": \"Flujo auto vía gateway\",\n    \"rating\": 3,\n    \"category\": \"Ficcion\",\n    \"stock\": 5,\n    \"visible\": true,\n    \"publication_date\": \"2024-01-01\",\n    \"price\": 9.99,\n    \"photo\": \"https://covers.openlibrary.org/b/id/1234-L.jpg\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-03 - GET verificar que existe",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Libro existe con ISBN correcto', () => {",
+            "  pm.expect(pm.response.json().isbn).to.equal(pm.collectionVariables.get('autoIsbn'));",
+            "});"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-04 - PUT actualización completa",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Título actualizado', () => pm.expect(pm.response.json().title).to.equal('Auto Test Gateway - EDITADO'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PUT\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  },\n  \"body\": {\n    \"title\": \"Auto Test Gateway - EDITADO\",\n    \"author\": \"Autor Auto Editado\",\n    \"isbn\": \"{{autoIsbn}}\",\n    \"pages\": 200,\n    \"description\": \"Actualizado vía PUT\",\n    \"rating\": 5,\n    \"category\": \"Ciencia Ficcion\",\n    \"stock\": 20,\n    \"visible\": true,\n    \"publication_date\": \"2024-06-01\",\n    \"price\": 14.99,\n    \"photo\": \"https://covers.openlibrary.org/b/id/5678-L.jpg\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-05 - GET verificar PUT",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Cambios del PUT guardados', () => pm.expect(pm.response.json().title).to.equal('Auto Test Gateway - EDITADO'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-06 - PATCH solo stock",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Stock actualizado a 99', () => pm.expect(pm.response.json().stock).to.equal(99));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"PATCH\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  },\n  \"body\": {\n    \"stock\": 99\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-07 - DELETE (soft delete)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 204', () => pm.response.to.have.status(204));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"DELETE\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        },
+        {
+          "name": "AUTO-08 - GET por ID → visible=false",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('visible=false confirma soft delete', () => pm.expect(pm.response.json().visible).to.be.false);",
+            "console.log('✅ Flujo gateway completado. ISBN:', pm.collectionVariables.get('autoIsbn'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"method\": \"GET\",\n  \"queryParams\": {\n    \"path\": \"/books/{{autoBookId}}\"\n  }\n}" },
+            "url": { "raw": "{{gatewayUrl}}/api/gateway", "host": ["{{gatewayUrl}}"], "path": ["api","gateway"] }
+          }
+        }
+      ]
+    }
+  ]
+}

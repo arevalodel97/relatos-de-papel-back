@@ -1,0 +1,1207 @@
+{
+  "info": {
+    "name": "ms-books-catalogue - Colección Completa",
+    "_postman_id": "ms-books-catalogue-full-v2",
+    "description": "Colección completa para validar todos los endpoints del microservicio de catálogo de libros con OpenSearch y paginación.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081", "type": "string" },
+    { "key": "createdBookId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "── GET /books ──────────────────────────",
+      "item": [
+        {
+          "name": "01 - Listar todos (sin filtros, página 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene books, facets y paginación', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.property('books');",
+                  "  pm.expect(b).to.have.property('facets');",
+                  "  pm.expect(b).to.have.property('totalElements');",
+                  "  pm.expect(b).to.have.property('totalPages');",
+                  "  pm.expect(b).to.have.property('currentPage');",
+                  "  pm.expect(b).to.have.property('pageSize');",
+                  "});",
+                  "pm.test('books tiene máximo 10 elementos', () => {",
+                  "  pm.expect(pm.response.json().books.length).to.be.at.most(10);",
+                  "});",
+                  "pm.test('currentPage es 0 y pageSize es 10', () => {",
+                  "  pm.expect(pm.response.json().currentPage).to.equal(0);",
+                  "  pm.expect(pm.response.json().pageSize).to.equal(10);",
+                  "});",
+                  "pm.test('Todos los libros son visible=true', () => {",
+                  "  pm.response.json().books.forEach(b => pm.expect(b.visible).to.be.true);",
+                  "});",
+                  "pm.test('Cada libro tiene los campos del mapping', () => {",
+                  "  const book = pm.response.json().books[0];",
+                  "  ['id','title','author','isbn','pages','rating','category','stock','visible','publication_date','price','photo']",
+                  "    .forEach(f => pm.expect(book).to.have.property(f));",
+                  "});",
+                  "pm.test('Facets tiene categories, ratings, priceRange y booksWithStock', () => {",
+                  "  const f = pm.response.json().facets;",
+                  "  pm.expect(f).to.have.all.keys('categories','ratings','priceRange','booksWithStock');",
+                  "});",
+                  "pm.test('totalElements refleja el total real (no solo la página)', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.totalElements).to.be.at.least(body.books.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 - Página 1 (segunda página)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('currentPage es 1', () => {",
+                  "  pm.expect(pm.response.json().currentPage).to.equal(1);",
+                  "});",
+                  "pm.test('books tiene máximo 10 elementos', () => {",
+                  "  pm.expect(pm.response.json().books.length).to.be.at.most(10);",
+                  "});",
+                  "pm.test('totalElements es el mismo que en la página 0', () => {",
+                  "  pm.expect(pm.response.json().totalElements).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=1&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 - Filtrar por categoría (Ficción)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos los libros son de categoría Ficción', () => {",
+                  "  pm.response.json().books.forEach(b => pm.expect(b.category).to.equal('Ficción'));",
+                  "});",
+                  "pm.test('Facets refleja el total de Ficción (no solo la página)', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.facets.booksWithStock).to.be.a('number');",
+                  "  pm.expect(body.totalElements).to.be.at.least(body.books.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?category=Ficción&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "category", "value": "Ficción" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 - Filtrar por rating 5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos tienen rating 5', () => {",
+                  "  pm.response.json().books.forEach(b => pm.expect(b.rating).to.equal(5));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?rating=5&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "rating", "value": "5" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 - Filtrar solo con stock (inStock=true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos tienen stock > 0', () => {",
+                  "  pm.response.json().books.forEach(b => pm.expect(b.stock).to.be.greaterThan(0));",
+                  "});",
+                  "pm.test('booksWithStock en facets coincide con totalElements', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.facets.booksWithStock).to.equal(body.totalElements);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?inStock=true&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "inStock", "value": "true" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "06 - Filtrar por rango de precio (10 - 17)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos los libros en el rango de precio', () => {",
+                  "  pm.response.json().books.forEach(b => {",
+                  "    pm.expect(b.price).to.be.at.least(10);",
+                  "    pm.expect(b.price).to.be.at.most(17);",
+                  "  });",
+                  "});",
+                  "pm.test('priceRange en facets dentro del rango', () => {",
+                  "  const pr = pm.response.json().facets.priceRange;",
+                  "  pm.expect(pr.min).to.be.at.least(10);",
+                  "  pm.expect(pr.max).to.be.at.most(17);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?minPrice=10&maxPrice=17&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "minPrice", "value": "10" },
+                { "key": "maxPrice", "value": "17" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 - Filtros combinados (Ficción + rating=5 + inStock)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos cumplen los 3 filtros', () => {",
+                  "  pm.response.json().books.forEach(b => {",
+                  "    pm.expect(b.category).to.equal('Ficción');",
+                  "    pm.expect(b.rating).to.equal(5);",
+                  "    pm.expect(b.stock).to.be.greaterThan(0);",
+                  "  });",
+                  "});",
+                  "pm.test('Facets calculados sobre el total filtrado', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.totalElements).to.be.at.least(body.books.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?category=Ficción&rating=5&inStock=true&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "category", "value": "Ficción" },
+                { "key": "rating", "value": "5" },
+                { "key": "inStock", "value": "true" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "08 - Buscar por título (title=Cien)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene books, facets y paginación', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.all.keys('books','facets','totalElements','totalPages','currentPage','pageSize');",
+                  "});",
+                  "pm.test('Encuentra al menos 1 resultado', () => {",
+                  "  pm.expect(pm.response.json().books.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?title=Cien&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "title", "value": "Cien" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "09 - Buscar por autor (author=García Márquez)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Encuentra libros de García Márquez', () => {",
+                  "  pm.expect(pm.response.json().books.length).to.be.greaterThan(0);",
+                  "});",
+                  "pm.test('Facets sobre el total de resultados', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.totalElements).to.be.at.least(body.books.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?author=García Márquez&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "author", "value": "García Márquez" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10 - Búsqueda con error tipográfico (author=Garsia Marquez)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Fuzziness tolera el error tipográfico', () => {",
+                  "  pm.expect(pm.response.json().books.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?author=Garsia Marquez&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "author", "value": "Garsia Marquez" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "11 - Buscar sin resultados → books vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('books vacío y totalElements 0', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.books).to.be.an('array').that.is.empty;",
+                  "  pm.expect(body.totalElements).to.equal(0);",
+                  "  pm.expect(body.totalPages).to.equal(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?title=xyzlibroinexistente123&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "title", "value": "xyzlibroinexistente123" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "12 - Buscar title + category + maxPrice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Estructura correcta con paginación', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.all.keys('books','facets','totalElements','totalPages','currentPage','pageSize');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?title=quijote&category=Clásicos&maxPrice=25&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "title", "value": "quijote" },
+                { "key": "category", "value": "Clásicos" },
+                { "key": "maxPrice", "value": "25" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── GET /books/{id} ──────────────────────",
+      "item": [
+        {
+          "name": "13 - Obtener libro existente (ID 1 → Cien años de soledad)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Devuelve el libro correcto', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.id).to.equal(1);",
+                  "  pm.expect(b.title).to.equal('Cien años de soledad');",
+                  "  pm.expect(b.author).to.equal('Gabriel García Márquez');",
+                  "  pm.expect(b.isbn).to.equal('978-0-06-088328-7');",
+                  "  pm.expect(b.price).to.equal(18.99);",
+                  "  pm.expect(b.rating).to.equal(5);",
+                  "  pm.expect(b.visible).to.be.true;",
+                  "});",
+                  "pm.test('No tiene facets ni paginación (es un solo libro)', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.not.have.property('facets');",
+                  "  pm.expect(b).to.not.have.property('totalElements');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/1", "host": ["{{baseUrl}}"], "path": ["books","1"] }
+          }
+        },
+        {
+          "name": "14 - Obtener libro que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respuesta con status y message', () => {",
+                  "  pm.expect(pm.response.json().status).to.equal(404);",
+                  "  pm.expect(pm.response.json()).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/99999", "host": ["{{baseUrl}}"], "path": ["books","99999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── POST /books ──────────────────────────",
+      "item": [
+        {
+          "name": "15 - Crear libro válido → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Libro creado con los datos enviados', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.property('id');",
+                  "  pm.expect(b.title).to.equal('Libro de Prueba Postman');",
+                  "  pm.expect(b.isbn).to.equal('978-1-234-56789-0');",
+                  "  pm.expect(b.price).to.equal(19.99);",
+                  "  pm.expect(b.visible).to.be.true;",
+                  "  pm.collectionVariables.set('createdBookId', b.id);",
+                  "  console.log('ID creado y guardado:', b.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Libro de Prueba Postman\",\n  \"author\": \"Autor de Prueba\",\n  \"isbn\": \"978-1-234-56789-0\",\n  \"pages\": 250,\n  \"description\": \"Libro creado desde Postman para pruebas de integración\",\n  \"rating\": 4,\n  \"category\": \"Ficción\",\n  \"stock\": 10,\n  \"visible\": true,\n  \"publication_date\": \"2024-01-15\",\n  \"price\": 19.99,\n  \"photo\": \"https://covers.openlibrary.org/b/id/12345678-L.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] }
+          }
+        },
+        {
+          "name": "16 - Crear con ISBN duplicado → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Mensaje menciona el ISBN duplicado', () => {",
+                  "  pm.expect(pm.response.json().message).to.include('978-0-06-088328-7');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Duplicado\",\n  \"author\": \"Autor\",\n  \"isbn\": \"978-0-06-088328-7\",\n  \"pages\": 100,\n  \"rating\": 3,\n  \"category\": \"Ficción\",\n  \"stock\": 5\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] }
+          }
+        },
+        {
+          "name": "17 - Crear con datos inválidos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respuesta con errores de validación', () => {",
+                  "  pm.expect(pm.response.json()).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"author\": \"\",\n  \"isbn\": \"isbn-invalido\",\n  \"pages\": -5,\n  \"rating\": 10,\n  \"category\": \"\",\n  \"stock\": -1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] }
+          }
+        },
+        {
+          "name": "18 - GET verificar que el libro creado existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El libro recién creado existe', () => {",
+                  "  pm.expect(pm.response.json().title).to.equal('Libro de Prueba Postman');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── PUT /books/{id} ──────────────────────",
+      "item": [
+        {
+          "name": "19 - Actualización completa válida → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos los campos fueron actualizados', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.title).to.equal('Libro de Prueba Postman - EDITADO');",
+                  "  pm.expect(b.stock).to.equal(25);",
+                  "  pm.expect(b.price).to.equal(24.99);",
+                  "  pm.expect(b.rating).to.equal(5);",
+                  "  pm.expect(b.category).to.equal('Ciencia Ficción');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Libro de Prueba Postman - EDITADO\",\n  \"author\": \"Autor de Prueba Actualizado\",\n  \"isbn\": \"978-1-234-56789-0\",\n  \"pages\": 300,\n  \"description\": \"Descripción actualizada mediante PUT\",\n  \"rating\": 5,\n  \"category\": \"Ciencia Ficción\",\n  \"stock\": 25,\n  \"visible\": true,\n  \"publication_date\": \"2024-06-01\",\n  \"price\": 24.99,\n  \"photo\": \"https://covers.openlibrary.org/b/id/99999999-L.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "20 - PUT con ISBN de otro libro → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Conflicto\",\n  \"author\": \"Autor\",\n  \"isbn\": \"978-0-14-043687-8\",\n  \"pages\": 100,\n  \"rating\": 3,\n  \"category\": \"Ficción\",\n  \"stock\": 5,\n  \"visible\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "21 - PUT libro que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"No existe\",\n  \"author\": \"Nadie\",\n  \"isbn\": \"978-1-111-11111-1\",\n  \"pages\": 100,\n  \"rating\": 3,\n  \"category\": \"Ficción\",\n  \"stock\": 0,\n  \"visible\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books/99999", "host": ["{{baseUrl}}"], "path": ["books","99999"] }
+          }
+        },
+        {
+          "name": "22 - GET verificar cambios del PUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Cambios del PUT guardados', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.title).to.equal('Libro de Prueba Postman - EDITADO');",
+                  "  pm.expect(b.category).to.equal('Ciencia Ficción');",
+                  "  pm.expect(b.price).to.equal(24.99);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── PATCH /books/{id} ────────────────────",
+      "item": [
+        {
+          "name": "23 - Actualizar solo stock y precio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Stock y precio actualizados, resto intacto', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.stock).to.equal(99);",
+                  "  pm.expect(b.price).to.equal(29.99);",
+                  "  pm.expect(b.title).to.equal('Libro de Prueba Postman - EDITADO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stock\": 99,\n  \"price\": 29.99\n}" },
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "24 - Ocultar libro (visible=false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Libro ahora invisible', () => {",
+                  "  pm.expect(pm.response.json().visible).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"visible\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "25 - GET → libro invisible NO aparece en listado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El libro invisible NO está en GET /books', () => {",
+                  "  const id = pm.collectionVariables.get('createdBookId');",
+                  "  const found = pm.response.json().books.some(b => String(b.id) === String(id));",
+                  "  pm.expect(found).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=0&size=100",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "26 - Volver a hacer visible el libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Libro vuelve a ser visible', () => {",
+                  "  pm.expect(pm.response.json().visible).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"visible\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "27 - PATCH libro que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stock\": 10\n}" },
+            "url": { "raw": "{{baseUrl}}/books/99999", "host": ["{{baseUrl}}"], "path": ["books","99999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── DELETE /books/{id} ───────────────────",
+      "item": [
+        {
+          "name": "28 - Eliminar libro creado (soft delete) → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));",
+                  "pm.test('Body vacío', () => pm.expect(pm.response.text()).to.equal(''));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "29 - GET → eliminado no aparece en listado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El libro eliminado NO está en GET /books', () => {",
+                  "  const id = pm.collectionVariables.get('createdBookId');",
+                  "  const found = pm.response.json().books.some(b => String(b.id) === String(id));",
+                  "  pm.expect(found).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=0&size=100",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "30 - GET por ID → aún existe con visible=false (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 → documento sigue en OpenSearch', () => pm.response.to.have.status(200));",
+                  "pm.test('visible=false confirma el soft delete', () => {",
+                  "  pm.expect(pm.response.json().visible).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/{{createdBookId}}", "host": ["{{baseUrl}}"], "path": ["books","{{createdBookId}}"] }
+          }
+        },
+        {
+          "name": "31 - Eliminar libro que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/books/99999", "host": ["{{baseUrl}}"], "path": ["books","99999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── FLUJO AUTOMATIZADO (ejecutar en orden) ──",
+      "item": [
+        {
+          "name": "AUTO-01 - GET libro no existe todavía",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function randDigits(n) {",
+                  "  let s = '';",
+                  "  for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 10);",
+                  "  return s;",
+                  "}",
+                  "const isbn = `${randDigits(3)}-${randDigits(1)}-${randDigits(3)}-${randDigits(5)}-${randDigits(1)}`;",
+                  "pm.collectionVariables.set('autoIsbn', isbn);",
+                  "pm.collectionVariables.set('autoBookId', '');",
+                  "console.log('ISBN generado para esta ejecución:', isbn);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El libro con este ISBN no existe aún', () => {",
+                  "  const isbn = pm.collectionVariables.get('autoIsbn');",
+                  "  const found = pm.response.json().books.some(b => b.isbn === isbn);",
+                  "  pm.expect(found).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?isbn={{autoIsbn}}&page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "isbn", "value": "{{autoIsbn}}" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "AUTO-02 - POST crear libro con ISBN dinámico",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function randDigits(n) {",
+                  "  let s = '';",
+                  "  for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 10);",
+                  "  return s;",
+                  "}",
+                  "const isbn = pm.collectionVariables.get('autoIsbn');",
+                  "console.log('ISBN para este run =', isbn);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 - libro creado', () => pm.response.to.have.status(201));",
+                  "pm.test('ISBN coincide con el generado', () => {",
+                  "  const isbn = pm.collectionVariables.get('autoIsbn');",
+                  "  pm.expect(pm.response.json().isbn).to.equal(isbn);",
+                  "});",
+                  "pm.test('Guardar ID para los siguientes pasos', () => {",
+                  "  const id = pm.response.json().id;",
+                  "  pm.expect(id).to.exist;",
+                  "  pm.collectionVariables.set('autoBookId', id);",
+                  "  console.log('ID guardado:', id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Libro Auto Test\",\n  \"author\": \"Autor Automatico\",\n  \"isbn\": \"{{autoIsbn}}\",\n  \"pages\": 100,\n  \"description\": \"Libro creado por flujo automatizado\",\n  \"rating\": 3,\n  \"category\": \"Ficcion\",\n  \"stock\": 5,\n  \"visible\": true,\n  \"publication_date\": \"2024-01-01\",\n  \"price\": 9.99,\n  \"photo\": \"https://covers.openlibrary.org/b/id/1234-L.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] }
+          }
+        },
+        {
+          "name": "AUTO-03 - GET verificar que ya existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El libro existe con el ID y ISBN correctos', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(String(b.id)).to.equal(String(pm.collectionVariables.get('autoBookId')));",
+                  "  pm.expect(b.isbn).to.equal(pm.collectionVariables.get('autoIsbn'));",
+                  "  pm.expect(b.title).to.equal('Libro Auto Test');",
+                  "  pm.expect(b.visible).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        },
+        {
+          "name": "AUTO-04 - PUT actualización completa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos los campos actualizados por PUT', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.title).to.equal('Libro Auto Test - EDITADO');",
+                  "  pm.expect(b.price).to.equal(14.99);",
+                  "  pm.expect(b.rating).to.equal(5);",
+                  "  pm.expect(b.isbn).to.equal(pm.collectionVariables.get('autoIsbn'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Libro Auto Test - EDITADO\",\n  \"author\": \"Autor Automatico Editado\",\n  \"isbn\": \"{{autoIsbn}}\",\n  \"pages\": 200,\n  \"description\": \"Descripcion actualizada por PUT automatico\",\n  \"rating\": 5,\n  \"category\": \"Ciencia Ficcion\",\n  \"stock\": 20,\n  \"visible\": true,\n  \"publication_date\": \"2024-06-01\",\n  \"price\": 14.99,\n  \"photo\": \"https://covers.openlibrary.org/b/id/5678-L.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        },
+        {
+          "name": "AUTO-05 - GET verificar cambios del PUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Los cambios del PUT están guardados', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.title).to.equal('Libro Auto Test - EDITADO');",
+                  "  pm.expect(b.price).to.equal(14.99);",
+                  "  pm.expect(b.category).to.equal('Ciencia Ficcion');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        },
+        {
+          "name": "AUTO-06 - PATCH actualización parcial (solo stock)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Solo stock actualizado, resto intacto', () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.stock).to.equal(99);",
+                  "  pm.expect(b.title).to.equal('Libro Auto Test - EDITADO');",
+                  "  pm.expect(b.price).to.equal(14.99);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stock\": 99\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        },
+        {
+          "name": "AUTO-07 - DELETE eliminar libro (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));",
+                  "pm.test('Body vacío', () => pm.expect(pm.response.text()).to.equal(''));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        },
+        {
+          "name": "AUTO-08 - GET por ID → visible=false (soft delete confirmado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 → documento sigue en OpenSearch', () => pm.response.to.have.status(200));",
+                  "pm.test('visible=false confirma el soft delete', () => {",
+                  "  pm.expect(pm.response.json().visible).to.be.false;",
+                  "});",
+                  "pm.test('El ISBN sigue siendo el correcto', () => {",
+                  "  pm.expect(pm.response.json().isbn).to.equal(pm.collectionVariables.get('autoIsbn'));",
+                  "});",
+                  "console.log('✅ Flujo completado. ISBN usado:', pm.collectionVariables.get('autoIsbn'), '| ID:', pm.collectionVariables.get('autoBookId'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books/{{autoBookId}}",
+              "host": ["{{baseUrl}}"], "path": ["books", "{{autoBookId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

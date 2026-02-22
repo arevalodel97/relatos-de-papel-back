@@ -1,29 +1,37 @@
-package com.relatosDePapel.relatosservice.dto;
+package com.relatosDePapel.relatosservice.document;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 
-public class BookResponseDTO {
+/**
+ * Documento que representa un libro en el índice OpenSearch "books"
+ * Los nombres de campo deben coincidir exactamente con el mapping de OpenSearch
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class BookDocument {
 
     private Long id;
     private String title;
     private String author;
+    private String isbn;
+    private Integer pages;
+    private String description;
+    private Integer rating;
+    private String category;
+    private Integer stock;
+    private Boolean visible;
 
     @JsonProperty("publication_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate publicationDate;
 
-    private Integer pages;
-    private String category;
-    private String isbn;
-    private Integer rating;
-    private Boolean visible;
-    private Integer stock;
-    private String description;
     private Float price;
     private String photo;
+
+    public BookDocument() {}
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -35,29 +43,29 @@ public class BookResponseDTO {
     public String getAuthor() { return author; }
     public void setAuthor(String author) { this.author = author; }
 
-    public LocalDate getPublicationDate() { return publicationDate; }
-    public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
 
     public Integer getPages() { return pages; }
     public void setPages(Integer pages) { this.pages = pages; }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public String getIsbn() { return isbn; }
-    public void setIsbn(String isbn) { this.isbn = isbn; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
 
-    public Boolean getVisible() { return visible; }
-    public void setVisible(Boolean visible) { this.visible = visible; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public Boolean getVisible() { return visible; }
+    public void setVisible(Boolean visible) { this.visible = visible; }
+
+    public LocalDate getPublicationDate() { return publicationDate; }
+    public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
 
     public Float getPrice() { return price; }
     public void setPrice(Float price) { this.price = price; }

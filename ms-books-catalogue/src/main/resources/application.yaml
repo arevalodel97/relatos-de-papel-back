@@ -2,25 +2,17 @@ spring:
   application:
     name: ms-books-catalogue
 
-  datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:books_catalogue_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:12345}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
-    show-sql: ${SHOW_SQL:true}
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+opensearch:
+  host: ${OPENSEARCH_HOST:luminous-hornbeam-1mfw0psh.us-east-1.bonsaisearch.net}
+  port: ${OPENSEARCH_PORT:443}
+  scheme: ${OPENSEARCH_SCHEME:https}
+  username: ${OPENSEARCH_USERNAME:b05a4fcbbd}
+  password: ${OPENSEARCH_PASSWORD:57bbd5b5eb4a3b2542d6}
+  index: ${OPENSEARCH_INDEX:books}
 
 server:
   port: ${SERVER_PORT:8081}
 
-# Configuración de Eureka Client
 eureka:
   client:
     enabled: ${EUREKA_ENABLED:true}
@@ -32,7 +24,6 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-# Configuración de Swagger/OpenAPI
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -52,6 +43,11 @@ management:
       show-details: always
 
 logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(---){faint} %clr([%-15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
   level:
-    root: ${LOG_LEVEL:INFO}
-    com.relatosDePapel.relatosservice: ${LOG_LEVEL:INFO}
+    root: WARN
+    com.relatosDePapel: INFO
+    org.springframework.web: WARN
+    org.springframework.cloud.netflix.eureka: WARN
+    com.netflix.discovery: WARN

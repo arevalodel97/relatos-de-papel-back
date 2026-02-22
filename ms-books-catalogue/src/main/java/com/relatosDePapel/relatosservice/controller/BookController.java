@@ -27,45 +27,51 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    @Operation(summary = "Listar todos los libros o filtrar", description = "Obtiene la lista de todos los libros visibles o filtra por parámetros")
+    @Operation(summary = "Listar todos los libros o filtrar",
+               description = "Obtiene la lista de todos los libros visibles. Acepta filtros opcionales.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista de libros obtenida exitosamente")
     })
     @GetMapping
-    public ResponseEntity<List<BookResponseDTO>> getAllBooks(
+    public ResponseEntity<BookSearchResponseDTO> getAllBooks(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishedDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publicationDate,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String isbn,
             @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) Boolean visible) {
+            @RequestParam(required = false) Boolean visible,
+            @RequestParam(required = false) Boolean inStock,
+            @RequestParam(required = false) Float minPrice,
+            @RequestParam(required = false) Float maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         BookSearchParamsDTO params = new BookSearchParamsDTO();
         params.setTitle(title);
         params.setAuthor(author);
-        params.setPublishedDate(publishedDate);
+        params.setPublicationDate(publicationDate);
         params.setCategory(category);
         params.setIsbn(isbn);
         params.setRating(rating);
         params.setVisible(visible);
+        params.setInStock(inStock);
+        params.setMinPrice(minPrice);
+        params.setMaxPrice(maxPrice);
+        params.setPage(page);
+        params.setSize(size);
 
-        // Si no se envía ningún filtro, obtener todos visibles (comportamiento por defecto)
-        boolean hasAnyFilter = (title != null && !title.isBlank()) ||
-                (author != null && !author.isBlank()) ||
-                (publishedDate != null) ||
-                (category != null && !category.isBlank()) ||
-                (isbn != null && !isbn.isBlank()) ||
-                (rating != null) ||
-                (visible != null);
+        return ResponseEntity.ok(bookService.searchBooks(params));
+    }
 
-        List<BookResponseDTO> books;
-        if (!hasAnyFilter) {
-            books = bookService.getAllBooks();
-        } else {
-            books = bookService.searchBooks(params);
-        }
-        return ResponseEntity.ok(books);
+    @Operation(summary = "Obtener facets para filtros dinámicos",
+               description = "Devuelve agregaciones: categorías, ratings, rango de precios y disponibilidad de stock")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Facets obtenidos exitosamente")
+    })
+    @GetMapping("/facets")
+    public ResponseEntity<BookFacetsDTO> getFacets() {
+        return ResponseEntity.ok(bookService.getFacets());
     }
 
     @Operation(summary = "Obtener libro por ID", description = "Obtiene los detalles de un libro específico por su ID")
@@ -76,8 +82,7 @@ public class BookController {
     @GetMapping("/{id}")
     public ResponseEntity<BookResponseDTO> getBookById(
             @Parameter(description = "ID del libro", required = true) @PathVariable Long id) {
-        BookResponseDTO book = bookService.getBookById(id);
-        return ResponseEntity.ok(book);
+        return ResponseEntity.ok(bookService.getBookById(id));
     }
 
     @Operation(summary = "Crear un libro", description = "Crea un nuevo libro en el catálogo")
@@ -88,64 +93,30 @@ public class BookController {
     })
     @PostMapping
     public ResponseEntity<BookResponseDTO> createBook(@Valid @RequestBody BookCreateRequestDTO dto) {
-        BookResponseDTO book = bookService.createBook(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(book);
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookService.createBook(dto));
     }
 
-    /**
-     * PUT /books/{id} - Actualizar un libro completo
-     */
+    @Operation(summary = "Actualizar un libro completo (PUT)")
     @PutMapping("/{id}")
     public ResponseEntity<BookResponseDTO> updateBook(
             @PathVariable Long id,
             @Valid @RequestBody BookUpdateRequestDTO dto) {
-        BookResponseDTO book = bookService.updateBook(id, dto);
-        return ResponseEntity.ok(book);
+        return ResponseEntity.ok(bookService.updateBook(id, dto));
     }
 
-    /**
-     * PATCH /books/{id} - Actualizar un libro parcialmente
-     */
+    @Operation(summary = "Actualizar un libro parcialmente (PATCH)")
     @PatchMapping("/{id}")
     public ResponseEntity<BookResponseDTO> patchBook(
             @PathVariable Long id,
             @Valid @RequestBody BookPatchRequestDTO dto) {
-        BookResponseDTO book = bookService.patchBook(id, dto);
-        return ResponseEntity.ok(book);
+        return ResponseEntity.ok(bookService.patchBook(id, dto));
     }
 
-    /**
-     * DELETE /books/{id} - Eliminar un libro
-     */
+    @Operation(summary = "Eliminar un libro (soft delete)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
-
-    /**
-     * GET /books/search - Buscar libros con filtros combinados (0..N parámetros)
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<BookResponseDTO>> searchBooks(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishedDate,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String isbn,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) Boolean visible) {
-
-        BookSearchParamsDTO params = new BookSearchParamsDTO();
-        params.setTitle(title);
-        params.setAuthor(author);
-        params.setPublishedDate(publishedDate);
-        params.setCategory(category);
-        params.setIsbn(isbn);
-        params.setRating(rating);
-        params.setVisible(visible);
-
-        List<BookResponseDTO> books = bookService.searchBooks(params);
-        return ResponseEntity.ok(books);
-    }
 }
+

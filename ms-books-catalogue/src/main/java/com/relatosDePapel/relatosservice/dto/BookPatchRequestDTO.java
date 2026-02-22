@@ -1,6 +1,7 @@
 package com.relatosDePapel.relatosservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -11,8 +12,9 @@ public class BookPatchRequestDTO {
 
     private String author;
 
+    @JsonProperty("publication_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate publishedDate;
+    private LocalDate publicationDate;
 
     @Min(value = 1, message = "El número de páginas debe ser mayor o igual a 1")
     private Integer pages;
@@ -34,6 +36,11 @@ public class BookPatchRequestDTO {
 
     private String description;
 
+    @Min(value = 0, message = "El precio no puede ser negativo")
+    private Float price;
+
+    private String photo;
+
     // Getters and Setters
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -41,8 +48,8 @@ public class BookPatchRequestDTO {
     public String getAuthor() { return author; }
     public void setAuthor(String author) { this.author = author; }
 
-    public LocalDate getPublishedDate() { return publishedDate; }
-    public void setPublishedDate(LocalDate publishedDate) { this.publishedDate = publishedDate; }
+    public LocalDate getPublicationDate() { return publicationDate; }
+    public void setPublicationDate(LocalDate publicationDate) { this.publicationDate = publicationDate; }
 
     public Integer getPages() { return pages; }
     public void setPages(Integer pages) { this.pages = pages; }
@@ -64,4 +71,10 @@ public class BookPatchRequestDTO {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Float getPrice() { return price; }
+    public void setPrice(Float price) { this.price = price; }
+
+    public String getPhoto() { return photo; }
+    public void setPhoto(String photo) { this.photo = photo; }
 }
