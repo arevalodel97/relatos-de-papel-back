@@ -1,5 +1,5 @@
 app = "relatos-eureka"
-primary_region = "mad"  # Madrid — más cercano a España
+primary_region = "ams"  # Ámsterdam — más cercano a España disponible
 
 [build]
   dockerfile = "Dockerfile"
