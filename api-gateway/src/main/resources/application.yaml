@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -12,9 +12,11 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
+            allowedOriginPatterns:
               - "${FRONTEND_URL:http://localhost:5173}"
-              - "http://localhost:3000"
+              - "${FRONTEND_URL_2:http://localhost:3000}"
+              - "https://*.vercel.app"
+              - "${VERCEL_CUSTOM_DOMAIN:https://placeholder-disabled.vercel.app}"
             allowedMethods:
               - GET
               - POST
@@ -24,6 +26,9 @@ spring:
               - OPTIONS
             allowedHeaders:
               - "*"
+            exposedHeaders:
+              - "Authorization"
+              - "Content-Type"
             allowCredentials: true
             maxAge: 3600
       default-filters:
