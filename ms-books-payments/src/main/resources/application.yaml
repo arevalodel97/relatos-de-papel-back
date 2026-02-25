@@ -2,7 +2,7 @@ spring:
   application:
     name: ms-books-payments
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${PAYMENTS_DB_NAME:payments_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${PAYMENTS_DB_NAME:payments_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -27,7 +27,6 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    hostname: localhost
     instance-id: ${spring.application.name}:${server.port}
 
 catalogue:
