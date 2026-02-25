@@ -1,5 +1,5 @@
 server:
-  port: 8761
+  port: ${PORT:8761}
 
 spring:
   application:
@@ -10,10 +10,14 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_PUBLIC_URL:http://localhost:${PORT:8761}/eureka/}
   server:
     enable-self-preservation: false
     eviction-interval-timer-in-ms: 5000
+  instance:
+    hostname: ${RAILWAY_PRIVATE_DOMAIN:localhost}
+    non-secure-port: ${PORT:8761}
+    prefer-ip-address: false
 
 management:
   endpoints:
