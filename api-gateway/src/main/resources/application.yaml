@@ -16,7 +16,7 @@ spring:
               - "${FRONTEND_URL:http://localhost:5173}"
               - "${FRONTEND_URL_2:http://localhost:3000}"
               - "https://*.vercel.app"
-              - "${VERCEL_CUSTOM_DOMAIN:https://placeholder-disabled.vercel.app}"
+              - "${VERCEL_CUSTOM_DOMAIN:}"
             allowedMethods:
               - GET
               - POST

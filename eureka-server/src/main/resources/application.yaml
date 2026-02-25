@@ -10,12 +10,12 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: ${EUREKA_PUBLIC_URL:http://localhost:${PORT:8761}/eureka/}
+      defaultZone: http://localhost:${PORT:8761}/eureka/
   server:
     enable-self-preservation: false
     eviction-interval-timer-in-ms: 5000
   instance:
-    hostname: ${RAILWAY_PRIVATE_DOMAIN:localhost}
+    hostname: ${FLY_APP_NAME:localhost}.internal
     non-secure-port: ${PORT:8761}
     prefer-ip-address: false
 

@@ -1,0 +1,43 @@
+app = "relatos-gateway"
+primary_region = "mad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  SERVER_PORT = "8080"
+  EUREKA_ENABLED = "true"
+  CATALOGUE_SERVICE_NAME = "ms-books-catalogue"
+  PAYMENTS_SERVICE_NAME = "ms-books-payments"
+  FRONTEND_URL_2 = "http://localhost:3000"
+
+# Los secretos (EUREKA_URL, FRONTEND_URL, VERCEL_CUSTOM_DOMAIN)
+# se configuran con: fly secrets set VARIABLE=valor
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 150
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "60s"
+    interval = "15s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8080
+    timeout = "10s"
+    type = "http"
